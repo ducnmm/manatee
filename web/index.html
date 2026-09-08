@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>manatee</title>
     <meta name="theme-color" content="#c6fab4" />
-    <meta name="description" content="Tweet one command. Lock on Sepolia. Mint on Creditcoin after Attestcoin verifies." />
+    <meta name="description" content="Get test mtee, then send on X." />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -20,102 +20,16 @@
   <body>
     <div class="page">
       <div class="stage">
-        <header class="topbar">
-          <div class="brand">
-            <img class="logo" src="/manatee-icon.jpg" alt="" width="40" height="40" />
-            <span>manatee</span>
-          </div>
-          <button id="connect" type="button" class="btn">Connect wallet</button>
-        </header>
+        <button id="connect" type="button" class="btn corner">Connect wallet</button>
 
         <section class="hero">
           <img class="mascot" src="/manatee-home-mascot.png" alt="" draggable="false" />
-          <p class="kicker">DeFi · Attestcoin · Creditcoin</p>
-          <h1>one tweet. two chains.</h1>
-          <p class="lede">
-            Lock allowlisted <code>mtee</code> on Sepolia. Mint on Creditcoin only after Attestcoin
-            verifies the event. The bot never chooses recipient or coin.
-          </p>
-          <div class="command-bar">
-            <code id="cmd">@manatee send 10 mtee @bob</code>
-            <a id="tweet-intent" class="icon-btn" href="#" target="_blank" rel="noreferrer" aria-label="Tweet this">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"
-                />
-              </svg>
-            </a>
-          </div>
-          <p class="hero-links">
-            <a class="btn ghost" href="https://sepolia.etherscan.io" target="_blank" rel="noreferrer">Sepolia</a>
-            <a class="btn ghost" href="https://creditcoin-testnet.blockscout.com" target="_blank" rel="noreferrer">Creditcoin</a>
-          </p>
-        </section>
-
-        <section class="grid">
-          <article class="card">
-            <span class="step">1</span>
-            <h2>Connect + register</h2>
-            <p>Map your X handle to a 0x address. Same registry the X bot uses.</p>
-            <label class="field">
-              <span>Handle</span>
-              <input id="handle" placeholder="@alice" autocomplete="off" />
-            </label>
-            <div class="row-actions">
-              <button id="register" type="button" class="btn">Register</button>
-            </div>
-            <p id="account" class="status"></p>
-          </article>
-
-          <article class="card">
-            <span class="step">2</span>
-            <h2>Faucet</h2>
-            <p>10 test <code>mtee</code> on Sepolia, from the deployer minter.</p>
-            <div class="row-actions">
-              <button id="faucet" type="button" class="btn secondary">Get 10 mtee</button>
-            </div>
-            <p id="faucet-status" class="status"></p>
-          </article>
-
-          <article class="card">
-            <span class="step">3</span>
-            <h2>Send</h2>
-            <p>You sign <code>ManateeLock.send</code> in MetaMask. Then wait ~8–10 min for attest.</p>
-            <label class="field">
-              <span>Amount</span>
-              <input id="amount" value="10" inputmode="decimal" />
-            </label>
-            <label class="field">
-              <span>To</span>
-              <input id="to-handle" placeholder="@bob" autocomplete="off" />
-            </label>
-            <div class="row-actions">
-              <button id="send" type="button" class="btn">Send mtee</button>
-            </div>
-            <p id="send-status" class="status"></p>
-          </article>
-
-          <article class="card">
-            <span class="step">4</span>
-            <h2>Paste a tweet or command</h2>
-            <p>Paste an X URL or the raw command. Parse only — it does not send.</p>
-            <label class="field">
-              <span>Command</span>
-              <input id="paste" placeholder="@manatee send 10 mtee @bob" autocomplete="off" />
-            </label>
-            <div class="row-actions">
-              <button id="parse" type="button" class="btn secondary">Parse</button>
-            </div>
-            <p id="paste-status" class="status"></p>
-          </article>
-        </section>
-
-        <section class="card activity-card">
-          <h2>Activity</h2>
-          <div id="activity" class="feed">
-            <p class="empty">No sends yet. Tweet the command or send from here.</p>
-          </div>
+          <form id="deposit" class="deposit" autocomplete="off">
+            <label class="sr-only" for="handle">X handle</label>
+            <input id="handle" placeholder="@alice" />
+            <button id="faucet" type="submit" class="btn">Get 10 mtee</button>
+          </form>
+          <p id="status" class="status"></p>
         </section>
 
         <div class="marquee" aria-hidden="true">
