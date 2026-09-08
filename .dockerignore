@@ -1,0 +1,12 @@
+.git
+.railway
+.env
+.env.*
+node_modules
+web/dist
+contracts
+activity.json
+registry.json
+docs
+*.md
+manatee.md

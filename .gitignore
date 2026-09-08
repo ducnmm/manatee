@@ -1,0 +1,23 @@
+# env / secrets
+.env
+.env.local
+registry.json
+activity.json
+.railway/
+
+# node
+node_modules/
+dist/
+web/dist/
+*.tsbuildinfo
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp

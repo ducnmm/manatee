@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>manatee — social cross-chain send</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="kicker">DeFi · Attestcoin · Creditcoin</p>
+        <h1>manatee</h1>
+        <p class="lede">
+          Tweet (or type) one command. Lock on Sepolia. Mint on Creditcoin only after Attestcoin
+          verifies the event. The bot never chooses recipient or coin.
+        </p>
+        <pre class="cmd">@manatee send 10 mtee @bob</pre>
+        <p class="actions">
+          <a id="tweet-intent" class="btn" href="#" target="_blank" rel="noreferrer">Tweet this</a>
+          <a class="btn ghost" href="https://sepolia.etherscan.io" target="_blank" rel="noreferrer">Sepolia</a>
+          <a class="btn ghost" href="https://creditcoin-testnet.blockscout.com" target="_blank" rel="noreferrer">Creditcoin</a>
+        </p>
+      </header>
+
+      <section class="grid">
+        <article>
+          <h2>1. Connect + register</h2>
+          <p>Map your X handle to a 0x address. Same registry the X bot uses.</p>
+          <input id="handle" placeholder="@alice" />
+          <button id="connect">Connect wallet</button>
+          <button id="register">Register</button>
+          <p id="account" class="status"></p>
+        </article>
+        <article>
+          <h2>2. Faucet</h2>
+          <p>10 test <code>mtee</code> on Sepolia, from the deployer minter.</p>
+          <button id="faucet">Get 10 mtee</button>
+          <p id="faucet-status" class="status"></p>
+        </article>
+        <article>
+          <h2>3. Send</h2>
+          <p>You sign <code>ManateeLock.send</code> in MetaMask. Then wait ~8–10 min for attest.</p>
+          <input id="amount" value="10" />
+          <input id="to-handle" placeholder="@bob" />
+          <button id="send">Send mtee</button>
+          <p id="send-status" class="status"></p>
+        </article>
+        <article>
+          <h2>Paste a tweet or command</h2>
+          <p>Like dugong: paste an X URL (needs twitterapi.io key) or the raw command.</p>
+          <input id="paste" placeholder="@manatee send 10 mtee @bob" />
+          <button id="parse">Parse</button>
+          <p id="paste-status" class="status"></p>
+        </article>
+      </section>
+
+      <section>
+        <h2>Activity</h2>
+        <div id="activity" class="feed"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

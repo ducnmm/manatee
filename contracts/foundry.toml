@@ -1,0 +1,31 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+allow_paths = ["../node_modules"]
+solc_version = "0.8.23"
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+evm_version = "shanghai"
+verbosity = 2
+fs_permissions = [{ access = "read", path = "./" }]
+
+[rpc_endpoints]
+sepolia = "${SOURCE_CHAIN_RPC_URL}"
+creditcoin = "https://rpc.cc3-testnet.creditcoin.network"
+
+# CC3 testnet already has EvmV1Decoder. Local `forge test` stays on
+# [profile.default] so Foundry deploys the library on anvil.
+[profile.creditcoin]
+src = "src"
+out = "out"
+libs = ["lib"]
+allow_paths = ["../node_modules"]
+solc_version = "0.8.23"
+optimizer = true
+optimizer_runs = 200
+evm_version = "shanghai"
+libraries = [
+  "../node_modules/@gluwa/usc-contracts/contracts/decoding/EvmV1Decoder.sol:EvmV1Decoder:0x731c345d79Fb8BbDC541f9DF3b6317585F849F9f",
+]
