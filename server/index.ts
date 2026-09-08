@@ -264,8 +264,13 @@ async function pollX(): Promise<void> {
                 sepoliaTx,
               });
               const r1 = `submitted — locked on Sepolia, waiting Attestcoin confirm ~8-10 min (not minted yet)\n${sepoliaTxUrl(sepoliaTx)}`;
-              const id = await replyToTweet(tweet.id, r1);
-              console.log(`X reply 1/2 as @${as}: ${id}`);
+              try {
+                const id = await replyToTweet(tweet.id, r1);
+                console.log(`X reply 1/2 as @${as}: ${id}`);
+              } catch (replyError: unknown) {
+                const replyMessage = replyError instanceof Error ? replyError.message : String(replyError);
+                console.error(`X reply 1/2 failed (mint continues): ${replyMessage}`);
+              }
             },
           });
           const sepoliaTx = out.kind === 'send' ? out.sepoliaTx : undefined;
