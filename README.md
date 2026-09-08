@@ -126,7 +126,7 @@ Fill `CREDITCOIN_MINT` and `CREDITCOIN_MTEE` in `.env`. Re-`source` `.env`.
 
 Same command: `@manatee send 10 mtee @bob`. Register / faucet / sign on the site. X bot polls mentions.
 
-Live (Railway, one service — web + API + chain worker + X poller): see the public URL after deploy. Mentions are `@manatee`. Replies post as `@DugongWallet` via twitterapi.io (same posting session as dugong; we did not copy dugong's OAuth, markets, or databases).
+Live: [manatee-production.up.railway.app](https://manatee-production.up.railway.app) — one Railway service (web + API + chain worker + X poller). Mentions are `@manatee`. Replies post as `@DugongWallet` via twitterapi.io (same posting session as dugong; we did not copy dugong's OAuth, markets, or databases).
 
 ```bash
 npm run server     # API + chain worker + X poller  http://127.0.0.1:8787
