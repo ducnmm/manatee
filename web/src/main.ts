@@ -10,6 +10,16 @@ type Cfg = {
   bot: string;
 };
 
+type Activity = {
+  at: string;
+  source: string;
+  text: string;
+  author?: string;
+  sepoliaTx?: string;
+  creditcoinTx?: string;
+  error?: string;
+};
+
 declare global {
   interface Window {
     ethereum?: {
@@ -23,6 +33,43 @@ const $ = (id: string) => document.getElementById(id)!;
 let cfg: Cfg;
 let account = '';
 
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function shorten(address: string): string {
+  if (address.length < 12) {
+    return address;
+  }
+  return `${address.slice(0, 6)}…${address.slice(-4)}`;
+}
+
+function relative(iso: string): string {
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) {
+    return '';
+  }
+  const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (seconds < 45) {
+    return 'just now';
+  }
+  const units: Array<[string, number]> = [
+    ['d', 86400],
+    ['h', 3600],
+    ['m', 60],
+  ];
+  for (const [label, size] of units) {
+    if (seconds >= size) {
+      return `${Math.floor(seconds / size)}${label} ago`;
+    }
+  }
+  return `${seconds}s ago`;
+}
+
 async function api(path: string, init?: RequestInit) {
   const res = await fetch(path, {
     headers: { 'content-type': 'application/json' },
@@ -35,33 +82,58 @@ async function api(path: string, init?: RequestInit) {
   return body;
 }
 
+function setStatus(id: string, html: string, err = false): void {
+  const el = $(id);
+  el.classList.toggle('err', err);
+  el.innerHTML = html;
+}
+
+function formatResult(out: Record<string, unknown>): string {
+  if (out.kind === 'send') {
+    const to = typeof out.to === 'string' ? shorten(out.to) : '';
+    return `send <strong>${escapeHtml(String(out.amount))} mtee</strong> → @${escapeHtml(String(out.handle))} (${escapeHtml(to)})`;
+  }
+  if (out.kind === 'register') {
+    return `register @${escapeHtml(String(out.handle))} → ${escapeHtml(shorten(String(out.address)))}`;
+  }
+  return escapeHtml(JSON.stringify(out));
+}
+
 async function loadCfg() {
   cfg = await api('/api/config');
   const cmd = `@${cfg.bot} send 10 mtee @bob`;
-  const intent = `https://x.com/intent/tweet?text=${encodeURIComponent(cmd)}`;
-  ($('tweet-intent') as HTMLAnchorElement).href = intent;
+  $('cmd').textContent = cmd;
+  ($('tweet-intent') as HTMLAnchorElement).href =
+    `https://x.com/intent/tweet?text=${encodeURIComponent(cmd)}`;
 }
 
 async function refreshActivity() {
-  const items = (await api('/api/activity')) as Array<{
-    at: string;
-    source: string;
-    text: string;
-    author?: string;
-    sepoliaTx?: string;
-    creditcoinTx?: string;
-    error?: string;
-  }>;
-  $('activity').innerHTML = items
-    .slice(0, 12)
+  const items = (await api('/api/activity')) as Activity[];
+  const rows = items
+    .filter((i) => !(i.error && /create_tweet_v2|407/.test(i.error) && !i.sepoliaTx))
+    .slice(0, 12);
+  if (rows.length === 0) {
+    $('activity').innerHTML = `<p class="empty">No sends yet. Tweet the command or send from here.</p>`;
+    return;
+  }
+  $('activity').innerHTML = rows
     .map((i) => {
       const sepolia = i.sepoliaTx
-        ? `<a href="${cfg.explorers.sepolia}${i.sepoliaTx}">sepolia</a>`
+        ? `<a href="${cfg.explorers.sepolia}${i.sepoliaTx}" target="_blank" rel="noreferrer">Sepolia ${shorten(i.sepoliaTx)}</a>`
         : '';
       const cc = i.creditcoinTx
-        ? `<a href="${cfg.explorers.creditcoin}${i.creditcoinTx}">creditcoin</a>`
+        ? `<a href="${cfg.explorers.creditcoin}${i.creditcoinTx}" target="_blank" rel="noreferrer">Creditcoin ${shorten(i.creditcoinTx)}</a>`
         : '';
-      return `<div class="row"><strong>${i.source}</strong> ${i.author ? `@${i.author}` : ''} — ${i.text}<br>${sepolia} ${cc} ${i.error ? `<span class="err">${i.error}</span>` : ''}</div>`;
+      const err = i.error && !i.creditcoinTx ? `<span class="err">${escapeHtml(i.error)}</span>` : '';
+      return `<div class="item">
+        <div class="head">
+          <span class="badge ${escapeHtml(i.source)}">${escapeHtml(i.source)}</span>
+          ${i.author ? `<strong>@${escapeHtml(i.author)}</strong>` : ''}
+          <time>${escapeHtml(relative(i.at))}</time>
+        </div>
+        <div class="text">${escapeHtml(i.text)}</div>
+        <div class="meta">${sepolia}${cc}${err}</div>
+      </div>`;
     })
     .join('');
 }
@@ -94,11 +166,13 @@ async function connect() {
   }
   const signer = await provider.getSigner();
   account = await signer.getAddress();
-  $('account').textContent = account;
+  $('connect').textContent = shorten(account);
+  setStatus('account', `connected ${escapeHtml(shorten(account))}`);
   return signer;
 }
 
-$('connect').onclick = () => connect().catch((e) => ($('account').textContent = String(e.message)));
+$('connect').onclick = () =>
+  connect().catch((e) => setStatus('account', e instanceof Error ? e.message : String(e), true));
 
 $('register').onclick = async () => {
   try {
@@ -110,10 +184,10 @@ $('register').onclick = async () => {
       method: 'POST',
       body: JSON.stringify({ handle, address: account }),
     });
-    $('account').textContent = `registered @${out.handle} -> ${out.address}`;
+    setStatus('account', `registered @${escapeHtml(out.handle)} → ${escapeHtml(shorten(out.address))}`);
     await refreshActivity();
   } catch (e) {
-    $('account').textContent = e instanceof Error ? e.message : String(e);
+    setStatus('account', e instanceof Error ? e.message : String(e), true);
   }
 };
 
@@ -126,10 +200,10 @@ $('faucet').onclick = async () => {
       method: 'POST',
       body: JSON.stringify({ address: account }),
     });
-    $('faucet-status').innerHTML = `<a href="${out.url}">${out.tx}</a>`;
+    setStatus('faucet-status', `<a href="${out.url}" target="_blank" rel="noreferrer">${shorten(out.tx)}</a>`);
     await refreshActivity();
   } catch (e) {
-    $('faucet-status').textContent = e instanceof Error ? e.message : String(e);
+    setStatus('faucet-status', e instanceof Error ? e.message : String(e), true);
   }
 };
 
@@ -161,10 +235,13 @@ $('send').onclick = async () => {
         text: `send ${amount} mtee ${toHandle}`,
       }),
     });
-    $('send-status').textContent = `locked ${tx.hash} — wait ~8-10 min for attest (keep worker running)`;
+    setStatus(
+      'send-status',
+      `locked <a href="${cfg.explorers.sepolia}${tx.hash}" target="_blank" rel="noreferrer">${shorten(tx.hash)}</a> — wait ~8–10 min for attest`,
+    );
     await refreshActivity();
   } catch (e) {
-    $('send-status').textContent = e instanceof Error ? e.message : String(e);
+    setStatus('send-status', e instanceof Error ? e.message : String(e), true);
   }
 };
 
@@ -176,17 +253,17 @@ $('parse').onclick = async () => {
         method: 'POST',
         body: JSON.stringify({ url: raw, execute: false }),
       });
-      $('paste-status').textContent = JSON.stringify(out.result);
+      setStatus('paste-status', formatResult(out.result as Record<string, unknown>));
     } else {
       const out = await api('/api/command', {
         method: 'POST',
         body: JSON.stringify({ text: raw, execute: false }),
       });
-      $('paste-status').textContent = JSON.stringify(out);
+      setStatus('paste-status', formatResult(out as Record<string, unknown>));
     }
     await refreshActivity();
   } catch (e) {
-    $('paste-status').textContent = e instanceof Error ? e.message : String(e);
+    setStatus('paste-status', e instanceof Error ? e.message : String(e), true);
   }
 };
 
