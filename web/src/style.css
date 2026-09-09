@@ -59,6 +59,25 @@ body {
   background: var(--paper);
 }
 
+.view {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition:
+    opacity 480ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.view.is-on {
+  z-index: 2;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -252,11 +271,6 @@ body {
   overflow: auto;
 }
 
-.dash[hidden],
-.hero[hidden] {
-  display: none;
-}
-
 .dash-wrap {
   position: relative;
   width: min(100%, 46rem);
@@ -310,10 +324,18 @@ body {
   border: 2px solid var(--ink);
   border-radius: 1.25rem;
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition:
+    opacity 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.account-dropdown[hidden] {
-  display: none;
+.account-dropdown.is-open {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
 }
 
 .account-dropdown button {
@@ -398,6 +420,9 @@ body {
   border: 2px solid var(--ink);
   border-radius: 999px;
   cursor: pointer;
+  transition:
+    background 220ms ease,
+    color 220ms ease;
 }
 
 .tab svg {
@@ -421,15 +446,31 @@ body {
   border-radius: 1.5rem;
 }
 
+.panel-stack {
+  display: grid;
+}
+
+.pane {
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition:
+    opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pane.is-on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
 #overview {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
-}
-
-#overview[hidden],
-#activity[hidden] {
-  display: none;
 }
 
 #wallet-bar {
@@ -656,5 +697,14 @@ body {
   .account-menu {
     top: 1.5rem;
     right: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view,
+  .pane,
+  .tab,
+  .account-dropdown {
+    transition: none;
   }
 }

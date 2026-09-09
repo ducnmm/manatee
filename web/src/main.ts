@@ -65,25 +65,37 @@ function updateConnectButton(): void {
 }
 
 function closeAccountMenu(): void {
-  $('account-dropdown').hidden = true;
+  $('account-dropdown').classList.remove('is-open');
 }
 
-function showHome(): void {
-  $('home').hidden = false;
-  $('dash').hidden = true;
-  closeAccountMenu();
+function setView(name: 'home' | 'dash'): void {
+  const home = $('home');
+  const dash = $('dash');
+  const onDash = name === 'dash';
+  home.classList.toggle('is-on', !onDash);
+  dash.classList.toggle('is-on', onDash);
+  home.setAttribute('aria-hidden', onDash ? 'true' : 'false');
+  dash.setAttribute('aria-hidden', onDash ? 'false' : 'true');
+  home.inert = onDash;
+  dash.inert = !onDash;
+  if (!onDash) {
+    closeAccountMenu();
+  }
   updateConnectButton();
 }
 
+function showHome(): void {
+  setView('home');
+}
+
 function showDash(): void {
-  $('home').hidden = true;
-  $('dash').hidden = false;
   $('dash-addr').textContent = shorten(account);
+  setView('dash');
 }
 
 function showTab(name: 'overview' | 'activity'): void {
-  $('overview').hidden = name !== 'overview';
-  $('activity').hidden = name !== 'activity';
+  $('overview').classList.toggle('is-on', name === 'overview');
+  $('activity').classList.toggle('is-on', name === 'activity');
   $('tab-overview').classList.toggle('on', name === 'overview');
   $('tab-activity').classList.toggle('on', name === 'activity');
 }
@@ -301,7 +313,7 @@ function bindProvider(): void {
     }
     account = list[0];
     updateConnectButton();
-    if (!$('dash').hidden) {
+    if ($('dash').classList.contains('is-on')) {
       void enterDash();
     }
   });
@@ -326,7 +338,7 @@ $('connect').onclick = () =>
 
 $('account-trigger').onclick = (event) => {
   event.stopPropagation();
-  $('account-dropdown').hidden = !$('account-dropdown').hidden;
+  $('account-dropdown').classList.toggle('is-open');
 };
 
 $('copy-addr').onclick = () => {

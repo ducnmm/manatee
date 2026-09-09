@@ -22,7 +22,7 @@
   <body>
     <div class="page">
       <div class="stage">
-        <section id="home" class="hero">
+        <section id="home" class="hero view is-on" aria-hidden="false">
           <button id="connect" type="button" class="btn corner">Connect wallet</button>
           <div class="home-cluster">
             <img class="mascot" src="/manatee-home-mascot.png" alt="" draggable="false" />
@@ -47,7 +47,7 @@
           </div>
         </section>
 
-        <section id="dash" class="dash" hidden>
+        <section id="dash" class="dash view" aria-hidden="true" inert>
           <div id="account-menu" class="account-menu">
             <button id="account-trigger" type="button">
               <span id="dash-addr"></span>
@@ -62,7 +62,7 @@
                 />
               </svg>
             </button>
-            <div id="account-dropdown" class="account-dropdown" hidden>
+            <div id="account-dropdown" class="account-dropdown">
               <button id="copy-addr" type="button">Copy address</button>
               <button id="home-link" type="button">Search</button>
               <button id="disconnect" type="button">Disconnect</button>
@@ -104,7 +104,8 @@
               </nav>
 
               <div class="panel">
-                <div id="overview">
+                <div class="panel-stack">
+                <div id="overview" class="pane is-on">
                   <button id="wallet-bar" type="button">
                     <span id="wallet-label">Connected</span>
                     <span class="copy-tile" aria-hidden="true">
@@ -146,8 +147,9 @@
                     </div>
                   </div>
                 </div>
-                <div id="activity" hidden>
+                <div id="activity" class="pane">
                   <div id="activity-list" class="activity-list"></div>
+                </div>
                 </div>
               </div>
             </div>
