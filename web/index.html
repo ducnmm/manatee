@@ -48,31 +48,117 @@
         </section>
 
         <section id="dash" class="dash" hidden>
-          <header class="dash-bar">
-            <button id="home-link" type="button" class="wordmark">manatee</button>
-            <div class="dash-account">
-              <span id="dash-addr"></span>
-              <button id="disconnect" type="button" class="btn ghost">Disconnect</button>
+          <div class="dash-wrap">
+            <div id="account-menu" class="account-menu">
+              <button id="account-trigger" type="button">
+                <span id="dash-addr"></span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M6 9l6 6 6-6"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+              <div id="account-dropdown" class="account-dropdown" hidden>
+                <button id="copy-addr" type="button">Copy address</button>
+                <button id="home-link" type="button">Search</button>
+                <button id="disconnect" type="button">Disconnect</button>
+              </div>
             </div>
-          </header>
-          <div class="dash-body">
-            <h1>Dashboard</h1>
-            <div class="dash-grid">
-              <article class="card">
-                <h2>Balances</h2>
-                <ul class="balances">
-                  <li><span>Sepolia ETH</span><strong id="bal-eth">—</strong></li>
-                  <li><span>mtee · Sepolia</span><strong id="bal-mtee">—</strong></li>
-                  <li><span>mtee · Creditcoin</span><strong id="bal-cc3">—</strong></li>
-                </ul>
-              </article>
-              <article class="card">
-                <h2>Get mtee</h2>
-                <form id="deposit" class="deposit" autocomplete="off">
-                  <button id="faucet" type="submit" class="btn">Get 10 mtee →</button>
-                </form>
-                <p id="status" class="status"></p>
-              </article>
+
+            <section class="hero-bal">
+              <div class="hero-bal-main">
+                <img class="token-lg" src="/apple-touch-icon.png" alt="" />
+                <strong id="hero-mtee">—</strong>
+              </div>
+              <button id="faucet" type="button" class="fund">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="M7 17L17 7M7 17h9M7 17V8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                deposit
+              </button>
+            </section>
+            <p id="status" class="status dash-status"></p>
+
+            <div class="dash-main">
+              <nav class="dash-tabs">
+                <button id="tab-overview" type="button" class="tab on" aria-label="Overview" title="Overview">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3" y="3" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4" />
+                    <rect x="13" y="3" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4" />
+                    <rect x="3" y="13" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4" />
+                    <rect x="13" y="13" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.4" />
+                  </svg>
+                </button>
+                <button id="tab-activity" type="button" class="tab" aria-label="Activity" title="Activity">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      d="M4 14l4-6 4 8 3-5 5 3"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.4"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </nav>
+
+              <div class="panel">
+                <div id="overview">
+                  <button id="wallet-bar" type="button">
+                    <span id="wallet-label">Connected</span>
+                    <span class="copy-tile" aria-hidden="true">
+                      <svg viewBox="0 0 24 24">
+                        <rect x="8" y="8" width="11" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+                        <path d="M6 16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" fill="none" stroke="currentColor" stroke-width="2" />
+                      </svg>
+                    </span>
+                  </button>
+                  <div class="token-grid">
+                    <div class="token-tile" title="Sepolia ETH">
+                      <span class="token-ic eth" aria-hidden="true">
+                        <svg viewBox="0 0 32 32">
+                          <circle cx="16" cy="16" r="16" fill="#627eea" />
+                          <path fill="#fff" fill-opacity=".75" d="M16.4 5.2v8.1l6.9 3.1z" />
+                          <path fill="#fff" d="M16.4 5.2 9.5 16.4l6.9-3.1z" />
+                          <path fill="#fff" fill-opacity=".75" d="M16.4 21.1v5.7l6.9-9.6z" />
+                          <path fill="#fff" d="M16.4 26.8v-5.7l-6.9-3.9z" />
+                        </svg>
+                      </span>
+                      <strong id="bal-eth">—</strong>
+                    </div>
+                    <div class="token-tile" title="mtee · Sepolia">
+                      <img class="token-ic" src="/apple-touch-icon.png" alt="" />
+                      <strong id="bal-mtee">—</strong>
+                    </div>
+                    <div class="token-tile" title="CTC · Creditcoin">
+                      <span class="token-ic ctc" aria-hidden="true">C</span>
+                      <strong id="bal-ctc">—</strong>
+                    </div>
+                    <div class="token-tile" title="mtee · Creditcoin">
+                      <span class="token-ic mtee-cc3">
+                        <img src="/apple-touch-icon.png" alt="" />
+                      </span>
+                      <strong id="bal-cc3">—</strong>
+                    </div>
+                  </div>
+                </div>
+                <div id="activity" hidden>
+                  <div id="activity-list" class="activity-list"></div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

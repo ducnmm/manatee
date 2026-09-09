@@ -5,6 +5,14 @@ type Cfg = {
 
 type SearchAccount = { handle: string; address: string };
 
+type ActivityItem = {
+  at: string;
+  source: string;
+  text: string;
+  sepoliaTx?: string;
+  creditcoinTx?: string;
+};
+
 declare global {
   interface Window {
     ethereum?: {
@@ -24,8 +32,9 @@ const SEPOLIA = {
   blockExplorerUrls: ['https://sepolia.etherscan.io'],
 };
 
-let cfg: Cfg;
+let cfg: Cfg | undefined;
 let account = '';
+let copiedTimer = 0;
 
 function escapeHtml(value: string): string {
   return value
@@ -55,16 +64,28 @@ function updateConnectButton(): void {
   $('connect').textContent = account ? 'Dashboard' : 'Connect wallet';
 }
 
+function closeAccountMenu(): void {
+  $('account-dropdown').hidden = true;
+}
+
 function showHome(): void {
   $('home').hidden = false;
   $('dash').hidden = true;
+  closeAccountMenu();
   updateConnectButton();
 }
 
 function showDash(): void {
   $('home').hidden = true;
   $('dash').hidden = false;
-  $('dash-addr').textContent = `${shorten(account)} · Sepolia`;
+  $('dash-addr').textContent = shorten(account);
+}
+
+function showTab(name: 'overview' | 'activity'): void {
+  $('overview').hidden = name !== 'overview';
+  $('activity').hidden = name !== 'activity';
+  $('tab-overview').classList.toggle('on', name === 'overview');
+  $('tab-activity').classList.toggle('on', name === 'activity');
 }
 
 function fmtAmount(value: string): string {
@@ -72,7 +93,79 @@ function fmtAmount(value: string): string {
   if (!Number.isFinite(n)) {
     return value;
   }
-  return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+  return n.toLocaleString(undefined, { maximumFractionDigits: n >= 1000 ? 1 : 4 });
+}
+
+function relTime(iso: string): string {
+  const stamp = Date.parse(iso);
+  if (!Number.isFinite(stamp)) {
+    return '';
+  }
+  const seconds = Math.max(0, Math.floor((Date.now() - stamp) / 1000));
+  if (seconds < 45) {
+    return 'just now';
+  }
+  const units: Array<[string, number]> = [
+    ['year', 31_536_000],
+    ['month', 2_592_000],
+    ['week', 604_800],
+    ['day', 86_400],
+    ['hour', 3_600],
+    ['minute', 60],
+  ];
+  const unit = units.find(([, size]) => seconds >= size) ?? ['second', 1];
+  const value = Math.floor(seconds / unit[1]);
+  return `${value} ${unit[0]}${value === 1 ? '' : 's'} ago`;
+}
+
+function activityLabel(text: string): string {
+  const lower = text.toLowerCase();
+  if (lower.includes('faucet')) {
+    return 'Deposit';
+  }
+  if (lower.includes('send') || lower.includes('lock')) {
+    return 'Transfer';
+  }
+  if (lower.includes('mint')) {
+    return 'Mint';
+  }
+  if (lower.includes('register')) {
+    return 'Register';
+  }
+  return text;
+}
+
+function renderActivity(items: ActivityItem[]): void {
+  const list = $('activity-list');
+  list.replaceChildren();
+  for (const item of items.slice(0, 20)) {
+    const href = item.sepoliaTx
+      ? `${cfg?.explorers.sepolia ?? 'https://sepolia.etherscan.io/tx/'}${item.sepoliaTx}`
+      : item.creditcoinTx
+        ? `${cfg?.explorers.creditcoin ?? 'https://creditcoin-testnet.blockscout.com/tx/'}${item.creditcoinTx}`
+        : '';
+    const row = document.createElement(href ? 'a' : 'div');
+    if (href && row instanceof HTMLAnchorElement) {
+      row.href = href;
+      row.target = '_blank';
+      row.rel = 'noreferrer';
+    }
+    const title = document.createElement('span');
+    title.textContent = activityLabel(item.text);
+    const meta = document.createElement('span');
+    meta.className = 'meta';
+    if (item.text.toLowerCase().includes('faucet')) {
+      const amount = document.createElement('strong');
+      amount.textContent = '+10 mtee';
+      meta.append(amount);
+    }
+    const when = document.createElement('span');
+    when.className = 'when';
+    when.textContent = relTime(item.at);
+    meta.append(when);
+    row.append(title, meta);
+    list.append(row);
+  }
 }
 
 function renderResults(accounts: SearchAccount[], query: string): void {
@@ -100,10 +193,19 @@ async function refreshDash(): Promise<void> {
     return;
   }
   try {
-    const bal = await api(`/api/balances?address=${account}`);
+    const [bal, activity] = await Promise.all([
+      api(`/api/balances?address=${account}`),
+      api('/api/activity'),
+    ]);
+    const mtee = fmtAmount(String(bal.sepoliaMtee));
+    $('hero-mtee').textContent = mtee;
     $('bal-eth').textContent = fmtAmount(String(bal.sepoliaEth));
-    $('bal-mtee').textContent = fmtAmount(String(bal.sepoliaMtee));
+    $('bal-mtee').textContent = mtee;
     $('bal-cc3').textContent = fmtAmount(String(bal.creditcoinMtee));
+    $('bal-ctc').textContent = fmtAmount(String(bal.creditcoinCtc ?? '0'));
+    $('dash-addr').textContent = bal.handle ? `@${bal.handle}` : shorten(account);
+    $('wallet-label').textContent = `Connected · ${shorten(account)}`;
+    renderActivity(Array.isArray(activity) ? (activity as ActivityItem[]) : []);
   } catch (error) {
     setStatus('status', error instanceof Error ? error.message : String(error), 'err');
   }
@@ -174,6 +276,7 @@ async function enterDash(): Promise<void> {
     }
   }
   showDash();
+  showTab('overview');
   await refreshDash();
 }
 
@@ -205,8 +308,35 @@ function bindProvider(): void {
   });
 }
 
+async function copyAddress(): Promise<void> {
+  if (!account) {
+    return;
+  }
+  await navigator.clipboard.writeText(account);
+  const label = $('copy-addr');
+  const prev = label.textContent;
+  label.textContent = 'Copied';
+  window.clearTimeout(copiedTimer);
+  copiedTimer = window.setTimeout(() => {
+    label.textContent = prev || 'Copy address';
+  }, 1600);
+}
+
 $('connect').onclick = () =>
   enterDash().catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
+
+$('account-trigger').onclick = (event) => {
+  event.stopPropagation();
+  $('account-dropdown').hidden = !$('account-dropdown').hidden;
+};
+
+$('copy-addr').onclick = () => {
+  void copyAddress();
+};
+
+$('wallet-bar').onclick = () => {
+  void copyAddress();
+};
 
 $('disconnect').onclick = () => {
   account = '';
@@ -218,6 +348,15 @@ $('disconnect').onclick = () => {
 $('home-link').onclick = () => {
   showHome();
 };
+
+$('tab-overview').onclick = () => showTab('overview');
+$('tab-activity').onclick = () => showTab('activity');
+
+document.addEventListener('click', (event) => {
+  if (!$('account-menu').contains(event.target as Node)) {
+    closeAccountMenu();
+  }
+});
 
 $('home-search').onsubmit = async (event) => {
   event.preventDefault();
@@ -235,8 +374,7 @@ $('home-search').onsubmit = async (event) => {
   }
 };
 
-$('deposit').onsubmit = async (event) => {
-  event.preventDefault();
+$('faucet').onclick = async () => {
   const faucet = $('faucet') as HTMLButtonElement;
   faucet.disabled = true;
   try {
