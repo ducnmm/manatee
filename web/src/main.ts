@@ -13,6 +13,14 @@ declare global {
 
 const $ = (id: string) => document.getElementById(id)!;
 
+const SEPOLIA = {
+  chainId: '0xaa36a7',
+  chainName: 'Sepolia',
+  nativeCurrency: { name: 'SepoliaETH', symbol: 'ETH', decimals: 18 },
+  rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
+  blockExplorerUrls: ['https://sepolia.etherscan.io'],
+};
+
 let cfg: Cfg;
 let account = '';
 
@@ -56,6 +64,28 @@ async function loadCfg() {
   cfg = await api('/api/config');
 }
 
+async function ensureSepolia(): Promise<void> {
+  const eth = window.ethereum!;
+  try {
+    await eth.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: SEPOLIA.chainId }],
+    });
+  } catch (error: unknown) {
+    const code =
+      error && typeof error === 'object' && 'code' in error
+        ? Number((error as { code: unknown }).code)
+        : 0;
+    if (code !== 4902) {
+      throw error;
+    }
+    await eth.request({
+      method: 'wallet_addEthereumChain',
+      params: [SEPOLIA],
+    });
+  }
+}
+
 async function connect() {
   if (!window.ethereum) {
     throw new Error('install MetaMask');
@@ -63,31 +93,12 @@ async function connect() {
   const accounts = (await window.ethereum.request({
     method: 'eth_requestAccounts',
   })) as string[];
-  const hexChain = `0x${cfg.sepoliaChainId.toString(16)}`;
-  try {
-    await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: hexChain }],
-    });
-  } catch {
-    await window.ethereum.request({
-      method: 'wallet_addEthereumChain',
-      params: [
-        {
-          chainId: hexChain,
-          chainName: 'Sepolia',
-          nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-          rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
-          blockExplorerUrls: ['https://sepolia.etherscan.io'],
-        },
-      ],
-    });
-  }
+  await ensureSepolia();
   account = accounts[0] ?? '';
   if (!account) {
     throw new Error('no account');
   }
-  $('connect').textContent = shorten(account);
+  $('connect').textContent = `${shorten(account)} · Sepolia`;
   return account;
 }
 
