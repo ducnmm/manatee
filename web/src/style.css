@@ -6,6 +6,9 @@
   --blue: #2f6bff;
   --coral: #ff5a3c;
   --white: #fffcf7;
+  --r-card: 1rem;
+  --r-in: 0.75rem;
+  --r-pill: 999px;
 }
 
 * {
@@ -88,7 +91,7 @@ body {
   color: var(--white);
   background: var(--ink);
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   font-size: 1.1rem;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -180,7 +183,7 @@ body {
   color: var(--ink);
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -215,7 +218,7 @@ body {
   padding: 0.95rem 1.15rem;
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 1.15rem;
+  border-radius: var(--r-in);
   font-size: 1.05rem;
 }
 
@@ -248,7 +251,7 @@ body {
 .status.ok {
   margin-top: 1rem;
   padding: 0.85rem 1rem;
-  border-radius: 1rem;
+  border-radius: var(--r-in);
 }
 
 .status.err {
@@ -296,7 +299,7 @@ body {
   color: var(--ink);
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   font-size: 1.05rem;
   cursor: pointer;
 }
@@ -322,7 +325,7 @@ body {
   min-width: 13.5rem;
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 1.25rem;
+  border-radius: var(--r-card);
   overflow: hidden;
   opacity: 0;
   transform: translateY(-8px);
@@ -360,7 +363,7 @@ body {
   padding: var(--dash-pad) 1.5rem;
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 1.5rem;
+  border-radius: var(--r-card);
 }
 
 .hero-bal-main {
@@ -418,7 +421,7 @@ body {
   color: var(--ink);
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
   transition:
     background 220ms ease,
@@ -443,7 +446,7 @@ body {
   padding: var(--dash-pad);
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 1.5rem;
+  border-radius: var(--r-card);
 }
 
 .panel-stack {
@@ -483,7 +486,7 @@ body {
   color: var(--ink);
   background: var(--paper);
   border: 2px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--r-in);
   font-size: 0.95rem;
   cursor: pointer;
 }
@@ -505,7 +508,7 @@ body {
   height: 2.7rem;
   background: var(--white);
   border: 2px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   transform: translateY(-50%);
 }
 
@@ -529,7 +532,7 @@ body {
   padding: 1rem 1.1rem;
   background: var(--paper);
   border: 2px solid var(--ink);
-  border-radius: 1.25rem;
+  border-radius: var(--r-in);
 }
 
 .token-ic {
@@ -597,7 +600,7 @@ body {
   color: var(--ink);
   background: var(--paper);
   border: 2px solid var(--ink);
-  border-radius: 999px;
+  border-radius: var(--r-in);
   text-decoration: none;
 }
 
