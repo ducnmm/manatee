@@ -104,24 +104,15 @@ input {
   padding: 4.5rem 1.25rem 7.5rem;
 }
 
-.mark {
+.mascot {
   position: relative;
   z-index: 1;
-  width: min(280px, 64vw);
-  margin-bottom: -36px;
-}
-
-.geo {
   display: block;
-  width: 100%;
+  width: auto;
   height: auto;
-}
-
-.mascot {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  max-width: min(320px, 70vw);
+  max-height: 180px;
+  margin: 0 auto -48px;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
@@ -261,9 +252,9 @@ input {
     top: 0.85rem;
     right: 0.85rem;
   }
-  .mark {
-    width: min(220px, 68vw);
-    margin-bottom: -28px;
+  .mascot {
+    max-width: min(240px, 70vw);
+    margin-bottom: -36px;
   }
   .deposit input {
     height: 3.5rem;
