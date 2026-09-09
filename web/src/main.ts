@@ -279,15 +279,14 @@ async function connect() {
 async function enterDash(): Promise<void> {
   if (!account) {
     await connect();
-  } else {
-    try {
-      await ensureSepolia();
-    } catch {
-      // still open the dashboard; faucet can retry the switch
-    }
   }
   showDash();
   showTab('overview');
+  try {
+    await ensureSepolia();
+  } catch {
+    // still show the dashboard; faucet can retry the switch
+  }
   await refreshDash();
 }
 
