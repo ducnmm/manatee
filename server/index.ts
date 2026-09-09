@@ -9,7 +9,7 @@ import { handleCommand } from '../lib/command';
 import { creditcoinTxUrl, loadConfig, sepoliaTxUrl } from '../lib/config';
 import { parseCommand } from '../lib/parser';
 import { ensureSeedRegistry, listRegistry } from '../lib/registry';
-import { fetchTweetById, replyToTweet, searchMentions, tweetIdFromUrl } from '../lib/x';
+import { fetchTweetById, replyToTweet, searchMentions, tweetIdFromUrl, type XTweet } from '../lib/x';
 import { startChainWorker } from '../worker/index';
 
 ensureSeedRegistry();
@@ -18,6 +18,7 @@ const PORT = Number(process.env.PORT ?? 8787);
 const WEB_DIR = join(process.cwd(), 'web', 'dist');
 const faucetCooldown = new Map<string, number>();
 const processedTweets = new Set<string>();
+const POLL_INTERVAL_SEC = 60;
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   const data = JSON.stringify(body);
@@ -266,6 +267,74 @@ function serveStatic(res: ServerResponse, pathname: string): void {
   res.end(readFileSync(file));
 }
 
+function isCommandTweet(text: string): boolean {
+  try {
+    parseCommand(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function processXTweet(tweet: XTweet, replyAs: string): Promise<void> {
+  if (processedTweets.has(tweet.id)) {
+    return;
+  }
+  processedTweets.add(tweet.id);
+  console.log(`X @${tweet.author}: ${tweet.text}`);
+  try {
+    const out = await handleCommand({
+      text: tweet.text,
+      author: tweet.author,
+      execute: true,
+      onLocked: async (sepoliaTx) => {
+        pushActivity({
+          source: 'x',
+          text: tweet.text,
+          author: tweet.author,
+          sepoliaTx,
+        });
+        const r1 = `submitted — locked on Sepolia, waiting Attestcoin confirm ~8-10 min (not minted yet)\n${sepoliaTxUrl(sepoliaTx)}`;
+        try {
+          const id = await replyToTweet(tweet.id, r1);
+          console.log(`X reply 1/2 as @${replyAs}: ${id}`);
+        } catch (replyError: unknown) {
+          const replyMessage = replyError instanceof Error ? replyError.message : String(replyError);
+          console.error(`X reply 1/2 failed (mint continues): ${replyMessage}`);
+        }
+      },
+    });
+    const sepoliaTx = out.kind === 'send' ? out.sepoliaTx : undefined;
+    const creditcoinTx = out.kind === 'send' ? out.creditcoinTx : undefined;
+    if (sepoliaTx && creditcoinTx) {
+      patchActivityBySepolia(sepoliaTx, { creditcoinTx });
+    } else if (out.kind === 'register') {
+      pushActivity({ source: 'x', text: tweet.text, author: tweet.author });
+    }
+    let r2 = '';
+    if (out.kind === 'send' && creditcoinTx) {
+      r2 = `confirmed — minted ${out.amount} mtee to @${out.handle} on Creditcoin\n${creditcoinTxUrl(creditcoinTx)}`;
+      console.log(`X minted ${creditcoinTxUrl(creditcoinTx)}`);
+    } else if (out.kind === 'register') {
+      r2 = `registered @${out.handle} -> ${out.address}`;
+    }
+    if (r2) {
+      const id = await replyToTweet(tweet.id, r2);
+      console.log(`X reply 2/2 as @${replyAs}: ${id}`);
+    }
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    pushActivity({ source: 'x', text: tweet.text, author: tweet.author, error: message });
+    console.error(`X command failed: ${message}`);
+    try {
+      await replyToTweet(tweet.id, `failed: ${message}`.slice(0, 240));
+    } catch (replyError: unknown) {
+      const replyMessage = replyError instanceof Error ? replyError.message : String(replyError);
+      console.error(`X error reply failed: ${replyMessage}`);
+    }
+  }
+}
+
 async function pollX(): Promise<void> {
   if (!process.env.TWITTERAPI_IO_API_KEY) {
     console.log('X poller off (no TWITTERAPI_IO_API_KEY). Web still works.');
@@ -273,85 +342,54 @@ async function pollX(): Promise<void> {
   }
   const bot = process.env.X_BOT_HANDLE ?? 'manatee';
   const as = process.env.X_REPLY_AS ?? 'DugongWallet';
-  console.log(`X poller on — mentions of @${bot.replace(/^@/, '')} (replies as @${as.replace(/^@/, '')})`);
+  console.log(
+    `X poller on — @${bot.replace(/^@/, '')} every ${POLL_INTERVAL_SEC}s, 1 tweet/poll (replies as @${as.replace(/^@/, '')})`,
+  );
+  const pending: XTweet[] = [];
   let sinceId: string | undefined;
-  let sinceUnix = Math.floor(Date.now() / 1000) - 30;
+  let sinceUnix = Math.floor(Date.now() / 1000) - (POLL_INTERVAL_SEC + 5);
+  let busy = false;
   for (;;) {
     try {
       const tweets = await searchMentions(sinceId, sinceUnix);
       sinceUnix = Math.floor(Date.now() / 1000) - 5;
-      for (const tweet of tweets.slice().reverse()) {
-        if (processedTweets.has(tweet.id)) {
-          continue;
-        }
-        processedTweets.add(tweet.id);
+      for (const tweet of tweets) {
         if (!sinceId || BigInt(tweet.id) > BigInt(sinceId)) {
           sinceId = tweet.id;
         }
-        try {
-          parseCommand(tweet.text);
-        } catch {
-          console.log(`X skip (not a command) ${tweet.id} @${tweet.author}`);
-          continue;
-        }
-        console.log(`X @${tweet.author}: ${tweet.text}`);
-        try {
-          const out = await handleCommand({
-            text: tweet.text,
-            author: tweet.author,
-            execute: true,
-            onLocked: async (sepoliaTx) => {
-              pushActivity({
-                source: 'x',
-                text: tweet.text,
-                author: tweet.author,
-                sepoliaTx,
-              });
-              const r1 = `submitted — locked on Sepolia, waiting Attestcoin confirm ~8-10 min (not minted yet)\n${sepoliaTxUrl(sepoliaTx)}`;
-              try {
-                const id = await replyToTweet(tweet.id, r1);
-                console.log(`X reply 1/2 as @${as}: ${id}`);
-              } catch (replyError: unknown) {
-                const replyMessage = replyError instanceof Error ? replyError.message : String(replyError);
-                console.error(`X reply 1/2 failed (mint continues): ${replyMessage}`);
-              }
-            },
+      }
+      const commands = tweets
+        .slice()
+        .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
+        .filter((tweet) => {
+          if (processedTweets.has(tweet.id) || pending.some((item) => item.id === tweet.id)) {
+            return false;
+          }
+          if (!isCommandTweet(tweet.text)) {
+            processedTweets.add(tweet.id);
+            console.log(`X skip (not a command) ${tweet.id} @${tweet.author}`);
+            return false;
+          }
+          return true;
+        });
+      pending.push(...commands);
+      if (pending.length > 1) {
+        console.log(`X queued ${pending.length - (busy ? 0 : 1)} tweet(s) for later polls`);
+      }
+      if (!busy) {
+        const tweet = pending.shift();
+        if (tweet) {
+          busy = true;
+          void processXTweet(tweet, as).finally(() => {
+            busy = false;
           });
-          const sepoliaTx = out.kind === 'send' ? out.sepoliaTx : undefined;
-          const creditcoinTx = out.kind === 'send' ? out.creditcoinTx : undefined;
-          if (sepoliaTx && creditcoinTx) {
-            patchActivityBySepolia(sepoliaTx, { creditcoinTx });
-          } else if (out.kind === 'register') {
-            pushActivity({ source: 'x', text: tweet.text, author: tweet.author });
-          }
-          let r2 = '';
-          if (out.kind === 'send' && creditcoinTx) {
-            r2 = `confirmed — minted ${out.amount} mtee to @${out.handle} on Creditcoin\n${creditcoinTxUrl(creditcoinTx)}`;
-            console.log(`X minted ${creditcoinTxUrl(creditcoinTx)}`);
-          } else if (out.kind === 'register') {
-            r2 = `registered @${out.handle} -> ${out.address}`;
-          }
-          if (r2) {
-            const id = await replyToTweet(tweet.id, r2);
-            console.log(`X reply 2/2 as @${as}: ${id}`);
-          }
-        } catch (error: unknown) {
-          const message = error instanceof Error ? error.message : String(error);
-          pushActivity({ source: 'x', text: tweet.text, author: tweet.author, error: message });
-          console.error(`X command failed: ${message}`);
-          try {
-            await replyToTweet(tweet.id, `failed: ${message}`.slice(0, 240));
-          } catch (replyError: unknown) {
-            const replyMessage = replyError instanceof Error ? replyError.message : String(replyError);
-            console.error(`X error reply failed: ${replyMessage}`);
-          }
         }
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       console.error(`X poll error: ${message}`);
     }
-    await new Promise((r) => setTimeout(r, 20_000));
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_SEC * 1000));
   }
 }
 
