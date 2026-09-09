@@ -1,12 +1,11 @@
 :root {
-  --ink: #1a120c;
-  --paper: #f3e6c8;
-  --foam: #f7ecd8;
-  --gold: #d4a017;
-  --gold-hot: #e8b82a;
-  --indigo: #12325a;
-  --wave: #1b4f86;
-  --night: #0b1d36;
+  --ink: #171717;
+  --paper: #f6f1e8;
+  --muted: #5b6475;
+  --yellow: #f5c400;
+  --blue: #2f6bff;
+  --coral: #ff5a3c;
+  --white: #fffcf7;
 }
 
 * {
@@ -19,23 +18,23 @@ body {
   margin: 0;
   overflow: hidden;
   color: var(--ink);
-  background: var(--night);
-  font-family: "Zen Kaku Gothic New", "Shippori Mincho", serif;
+  background: linear-gradient(135deg, #e8e4f6 0%, #f6f1e8 48%, #fdeee6 100%);
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
 button,
-input {
-  font-family: inherit;
-}
-
 .btn,
 .chip code {
-  font-family: "Shippori Mincho", "Zen Kaku Gothic New", serif;
+  font-family: "Archivo Black", Inter, sans-serif;
+}
+
+input {
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
 ::selection {
-  color: var(--night);
-  background: var(--gold);
+  color: var(--ink);
+  background: var(--yellow);
 }
 
 .sr-only {
@@ -58,47 +57,41 @@ input {
   position: relative;
   height: 100%;
   overflow: hidden;
-  border-radius: 1.25rem;
-  border: 1px solid #c9a56a;
-  background-color: var(--night);
-  background-image: url("/manatee-home-background.jpg");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  border-radius: 2rem;
+  background: var(--paper);
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
-  padding: 0.7rem 1.5rem;
-  color: var(--ink);
-  background: var(--gold);
-  border: 1.5px solid var(--ink);
+  gap: 0.4rem;
+  min-height: 3rem;
+  padding: 0.8rem 1.6rem;
+  color: var(--white);
+  background: var(--ink);
+  border: 0;
   border-radius: 999px;
-  box-shadow: 0 2px 0 var(--ink);
-  font-weight: 800;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
   line-height: 1;
   cursor: pointer;
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--gold-hot);
+  background: #2a2a2a;
 }
 
 .btn:disabled {
-  color: #6b6258;
-  background: #d9cbb0;
-  box-shadow: none;
+  color: #9aa0ab;
+  background: #d8d3cb;
   cursor: not-allowed;
 }
 
 .corner {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: 1.25rem;
+  right: 1.25rem;
   z-index: 3;
 }
 
@@ -111,14 +104,24 @@ input {
   padding: 4.5rem 1.25rem 7.5rem;
 }
 
-.mascot {
+.mark {
   position: relative;
   z-index: 1;
+  width: min(280px, 64vw);
+  margin-bottom: -36px;
+}
+
+.geo {
   display: block;
-  width: min(100%, 360px);
+  width: 100%;
   height: auto;
-  max-height: 160px;
-  margin-bottom: -72px;
+}
+
+.mascot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
@@ -130,68 +133,64 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: min(100%, 40rem);
+  width: min(100%, 38rem);
 }
 
 .deposit input {
   width: 100%;
   height: 4rem;
-  padding: 0 1.25rem;
+  padding: 0 1.35rem;
   color: var(--ink);
-  background: var(--foam);
-  border: 1.5px solid var(--ink);
-  border-radius: 0.35rem;
-  box-shadow: 0 3px 0 var(--indigo);
-  font-size: 1.1rem;
-  font-weight: 700;
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .deposit input::placeholder {
-  color: #7a6a52;
+  color: var(--muted);
 }
 
 .deposit input:focus {
   outline: none;
-  background: #fff8ea;
-  box-shadow: 0 0 0 3px var(--gold);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--yellow) 70%, white);
 }
 
 .deposit .btn {
-  margin-top: 1.35rem;
-  min-width: 11.5rem;
-  border-radius: 0.35rem;
-  font-size: 1.15rem;
+  margin-top: 1.25rem;
+  min-width: 12.5rem;
+  font-size: 1.05rem;
 }
 
 .status {
   position: relative;
   z-index: 2;
   min-height: 1.2em;
-  max-width: 36rem;
+  max-width: 34rem;
   margin: 1rem 0 0;
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
   word-break: break-word;
 }
 
 .status a {
-  color: var(--indigo);
+  color: var(--blue);
 }
 
 .status.err,
 .status.ok {
   padding: 0.85rem 1rem;
-  border: 1.5px solid var(--ink);
-  border-radius: 0.35rem;
+  border-radius: 1rem;
 }
 
 .status.err {
-  background: #f3d2c4;
+  background: #ffe1d8;
 }
 
 .status.ok {
-  background: var(--foam);
+  background: #e8f0ff;
 }
 
 .hero:focus-within + .marquee {
@@ -209,34 +208,37 @@ input {
 .marquee-track {
   display: flex;
   width: max-content;
-  gap: 12px;
+  gap: 10px;
   animation: marquee 42s linear infinite;
 }
 
 .chip {
   display: flex;
   align-items: center;
-  padding: 16px 24px;
-  border: 1.5px solid var(--ink);
-  border-radius: 0.35rem;
-  box-shadow: 0 2px 0 var(--indigo);
+  padding: 14px 22px;
+  border-radius: 1rem;
   white-space: nowrap;
 }
 
 .chip code {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
 }
 
-.chip.gold {
-  background: var(--gold);
+.chip.yellow {
+  background: var(--yellow);
+  color: var(--ink);
 }
-.chip.foam {
-  background: var(--foam);
+.chip.coral {
+  background: var(--coral);
+  color: var(--white);
 }
-.chip.indigo {
-  color: var(--foam);
-  background: var(--indigo);
+.chip.blue {
+  background: var(--blue);
+  color: var(--white);
+}
+.chip.ink {
+  background: var(--ink);
+  color: var(--white);
 }
 
 @keyframes marquee {
@@ -253,18 +255,15 @@ input {
     padding: 0.4rem;
   }
   .stage {
-    border-radius: 1rem;
-    background-image: url("/wave-portrait.jpg");
-    background-position: center 40%;
+    border-radius: 1.5rem;
   }
   .corner {
-    top: 0.75rem;
-    right: 0.75rem;
+    top: 0.85rem;
+    right: 0.85rem;
   }
-  .mascot {
-    width: min(100%, 260px);
-    max-height: 120px;
-    margin-bottom: -56px;
+  .mark {
+    width: min(220px, 68vw);
+    margin-bottom: -28px;
   }
   .deposit input {
     height: 3.5rem;
@@ -280,7 +279,7 @@ input {
     padding: 1rem;
   }
   .stage {
-    border-radius: 1.5rem;
+    border-radius: 2.25rem;
   }
   .corner {
     top: 1.5rem;

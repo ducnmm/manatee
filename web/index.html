@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>manatee</title>
-    <meta name="theme-color" content="#1a365d" />
+    <meta name="theme-color" content="#171717" />
     <meta name="description" content="Get test mtee, then send on X." />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/src/style.css" />
@@ -23,23 +23,37 @@
         <button id="connect" type="button" class="btn corner">Connect wallet</button>
 
         <section class="hero">
-          <img class="mascot" src="/manatee-home-mascot.png" alt="" draggable="false" />
+          <div class="mark" aria-hidden="true">
+            <svg class="geo" viewBox="0 0 320 320">
+              <circle cx="168" cy="150" r="96" fill="#f5c400" />
+              <path d="M168 54a96 96 0 0 1 0 192z" fill="#2f6bff" />
+              <circle cx="76" cy="132" r="40" fill="#171717" />
+              <path d="M92 44a76 76 0 0 1 76 76H92z" fill="#ff5a3c" />
+              <path d="M248 36a92 92 0 0 1 92 92h-92z" fill="#171717" />
+              <rect x="44" y="208" width="76" height="76" fill="#ff5a3c" />
+              <path d="M204 252a56 56 0 0 0 56 56h-56z" fill="#f5c400" />
+              <circle cx="268" cy="232" r="28" fill="#2f6bff" />
+            </svg>
+            <img class="mascot" src="/manatee-home-mascot.png" alt="" draggable="false" />
+          </div>
           <form id="deposit" class="deposit" autocomplete="off">
             <label class="sr-only" for="handle">X handle</label>
             <input id="handle" placeholder="@alice" />
-            <button id="faucet" type="submit" class="btn">Get 10 mtee</button>
+            <button id="faucet" type="submit" class="btn">Get 10 mtee →</button>
           </form>
           <p id="status" class="status"></p>
         </section>
 
         <div class="marquee" aria-hidden="true">
           <div class="marquee-track">
-            <div class="chip gold"><code>@manatee send 10 mtee @bob</code></div>
-            <div class="chip foam"><code>@manatee register @alice 0x…</code></div>
-            <div class="chip indigo"><code>@manatee send 1.5 mtee @bob</code></div>
-            <div class="chip gold"><code>@manatee send 10 mtee @bob</code></div>
-            <div class="chip foam"><code>@manatee register @alice 0x…</code></div>
-            <div class="chip indigo"><code>@manatee send 1.5 mtee @bob</code></div>
+            <div class="chip yellow"><code>@manatee send 10 mtee @bob</code></div>
+            <div class="chip coral"><code>@manatee register @alice 0x…</code></div>
+            <div class="chip blue"><code>@manatee send 1.5 mtee @bob</code></div>
+            <div class="chip ink"><code>@manatee send 10 mtee @bob</code></div>
+            <div class="chip yellow"><code>@manatee send 10 mtee @bob</code></div>
+            <div class="chip coral"><code>@manatee register @alice 0x…</code></div>
+            <div class="chip blue"><code>@manatee send 1.5 mtee @bob</code></div>
+            <div class="chip ink"><code>@manatee send 10 mtee @bob</code></div>
           </div>
         </div>
       </div>
