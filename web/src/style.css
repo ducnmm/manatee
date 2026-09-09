@@ -13,22 +13,21 @@
 }
 
 html,
+body,
+button,
+input,
+.btn,
+.status {
+  font-family: "Archivo Black", Inter, sans-serif;
+}
+
+html,
 body {
   height: 100%;
   margin: 0;
   overflow: hidden;
   color: var(--ink);
   background: linear-gradient(135deg, #e8e4f6 0%, #f6f1e8 48%, #fdeee6 100%);
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-}
-
-button,
-.btn {
-  font-family: "Archivo Black", Inter, sans-serif;
-}
-
-input {
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
 ::selection {
@@ -105,11 +104,11 @@ input {
 
 .mascot {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: block;
-  width: min(520px, 78vw);
+  width: min(340px, 58vw);
   height: auto;
-  margin: 0 auto -72px;
+  margin: 0 auto -28px;
   object-fit: contain;
   pointer-events: none;
   user-select: none;
@@ -197,8 +196,8 @@ input {
     right: 0.85rem;
   }
   .mascot {
-    width: min(340px, 88vw);
-    margin-bottom: -52px;
+    width: min(260px, 72vw);
+    margin-bottom: -20px;
   }
   .deposit input {
     height: 4.4rem;
