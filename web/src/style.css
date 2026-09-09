@@ -1,12 +1,12 @@
 :root {
-  --ink: #0a0a0a;
-  --paper: #ffffff;
-  --cyan: #a6faff;
-  --lime: #b8ff9f;
-  --yellow: #fff59f;
-  --yellow-hover: #fff066;
-  --shadow: 5px 6px 0 var(--ink);
-  --shadow-sm: 2px 3px 0 var(--ink);
+  --ink: #1a120c;
+  --paper: #f3e6c8;
+  --foam: #f7ecd8;
+  --gold: #d4a017;
+  --gold-hot: #e8b82a;
+  --indigo: #12325a;
+  --wave: #1b4f86;
+  --night: #0b1d36;
 }
 
 * {
@@ -19,8 +19,8 @@ body {
   margin: 0;
   overflow: hidden;
   color: var(--ink);
-  background: var(--paper);
-  font-family: Unbounded, ui-sans-serif, system-ui, sans-serif;
+  background: var(--night);
+  font-family: "Zen Kaku Gothic New", "Shippori Mincho", serif;
 }
 
 button,
@@ -28,9 +28,14 @@ input {
   font-family: inherit;
 }
 
+.btn,
+.chip code {
+  font-family: "Shippori Mincho", "Zen Kaku Gothic New", serif;
+}
+
 ::selection {
-  color: var(--ink);
-  background: var(--yellow);
+  color: var(--night);
+  background: var(--gold);
 }
 
 .sr-only {
@@ -53,10 +58,11 @@ input {
   position: relative;
   height: 100%;
   overflow: hidden;
-  border-radius: 2rem;
-  background-color: #21a7df;
+  border-radius: 1.25rem;
+  border: 1px solid #c9a56a;
+  background-color: var(--night);
   background-image: url("/manatee-home-background.jpg");
-  background-position: center bottom;
+  background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
 }
@@ -66,29 +72,26 @@ input {
   align-items: center;
   justify-content: center;
   min-height: 2.75rem;
-  padding: 0.7rem 1.4rem;
+  padding: 0.7rem 1.5rem;
   color: var(--ink);
-  background: var(--yellow);
-  border: 3px solid var(--ink);
-  border-radius: 1.75rem;
-  box-shadow: var(--shadow-sm);
+  background: var(--gold);
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 0 2px 0 var(--ink);
   font-weight: 800;
+  letter-spacing: 0.02em;
   line-height: 1;
   cursor: pointer;
-  text-decoration: none;
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--yellow-hover);
-  transform: translate(-1px, -1px);
-  box-shadow: 4px 5px 0 var(--ink);
+  background: var(--gold-hot);
 }
 
 .btn:disabled {
-  color: #676767;
-  background: #d4d4d4;
+  color: #6b6258;
+  background: #d9cbb0;
   box-shadow: none;
-  transform: none;
   cursor: not-allowed;
 }
 
@@ -111,8 +114,12 @@ input {
 .mascot {
   position: relative;
   z-index: 1;
-  width: min(100%, 430px);
-  margin-bottom: -84px;
+  display: block;
+  width: min(100%, 360px);
+  height: auto;
+  max-height: 160px;
+  margin-bottom: -72px;
+  object-fit: contain;
   pointer-events: none;
   user-select: none;
 }
@@ -131,29 +138,29 @@ input {
   height: 4rem;
   padding: 0 1.25rem;
   color: var(--ink);
-  background: var(--paper);
-  border: 4px solid var(--ink);
-  border-radius: 0.5rem;
-  box-shadow: 6px 7px 0 var(--ink);
-  font-size: 1.125rem;
+  background: var(--foam);
+  border: 1.5px solid var(--ink);
+  border-radius: 0.35rem;
+  box-shadow: 0 3px 0 var(--indigo);
+  font-size: 1.1rem;
   font-weight: 700;
+}
+
+.deposit input::placeholder {
+  color: #7a6a52;
 }
 
 .deposit input:focus {
   outline: none;
-  background: var(--cyan);
-  transform: translate(-1px, -1px);
-  box-shadow: 7px 8px 0 var(--ink);
+  background: #fff8ea;
+  box-shadow: 0 0 0 3px var(--gold);
 }
 
 .deposit .btn {
   margin-top: 1.35rem;
-  min-width: 11rem;
-  border-radius: 0.625rem;
-  border-width: 3px;
-  box-shadow: var(--shadow);
-  font-size: 1.2rem;
-  font-weight: 900;
+  min-width: 11.5rem;
+  border-radius: 0.35rem;
+  font-size: 1.15rem;
 }
 
 .status {
@@ -169,23 +176,22 @@ input {
 }
 
 .status a {
-  color: var(--ink);
+  color: var(--indigo);
+}
+
+.status.err,
+.status.ok {
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 0.35rem;
 }
 
 .status.err {
-  padding: 0.85rem 1rem;
-  background: #fecaca;
-  border: 2px solid var(--ink);
-  border-radius: 0.5rem;
-  box-shadow: var(--shadow-sm);
+  background: #f3d2c4;
 }
 
 .status.ok {
-  padding: 0.85rem 1rem;
-  background: #a5f3fc;
-  border: 2px solid var(--ink);
-  border-radius: 0.5rem;
-  box-shadow: var(--shadow-sm);
+  background: var(--foam);
 }
 
 .hero:focus-within + .marquee {
@@ -195,7 +201,7 @@ input {
 .marquee {
   position: absolute;
   inset-inline: 0;
-  bottom: 2rem;
+  bottom: 1.75rem;
   z-index: 2;
   overflow: hidden;
 }
@@ -210,27 +216,27 @@ input {
 .chip {
   display: flex;
   align-items: center;
-  padding: 18px 26px;
-  border: 2px solid var(--ink);
-  border-radius: 0.6rem;
-  box-shadow: var(--shadow-sm);
+  padding: 16px 24px;
+  border: 1.5px solid var(--ink);
+  border-radius: 0.35rem;
+  box-shadow: 0 2px 0 var(--indigo);
   white-space: nowrap;
 }
 
 .chip code {
-  font-family: Unbounded, ui-sans-serif, system-ui, sans-serif;
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 700;
 }
 
-.chip.yellow {
-  background: #fef9c3;
+.chip.gold {
+  background: var(--gold);
 }
-.chip.cyan {
-  background: #cffafe;
+.chip.foam {
+  background: var(--foam);
 }
-.chip.lime {
-  background: #ecfccb;
+.chip.indigo {
+  color: var(--foam);
+  background: var(--indigo);
 }
 
 @keyframes marquee {
@@ -247,15 +253,18 @@ input {
     padding: 0.4rem;
   }
   .stage {
-    border-radius: 1.4rem;
+    border-radius: 1rem;
+    background-image: url("/wave-portrait.jpg");
+    background-position: center 40%;
   }
   .corner {
     top: 0.75rem;
     right: 0.75rem;
   }
   .mascot {
-    width: min(100%, 300px);
-    margin-bottom: -64px;
+    width: min(100%, 260px);
+    max-height: 120px;
+    margin-bottom: -56px;
   }
   .deposit input {
     height: 3.5rem;
@@ -271,7 +280,7 @@ input {
     padding: 1rem;
   }
   .stage {
-    border-radius: 2.5rem;
+    border-radius: 1.5rem;
   }
   .corner {
     top: 1.5rem;
