@@ -102,6 +102,11 @@ body {
   padding: 5rem 1.5rem;
 }
 
+.hero .btn {
+  position: relative;
+  z-index: 2;
+}
+
 .mascot {
   position: relative;
   z-index: 3;
@@ -184,6 +189,130 @@ body {
   background: #e8f0ff;
 }
 
+.dash {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: auto;
+}
+
+.dash[hidden],
+.hero[hidden] {
+  display: none;
+}
+
+.dash-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 1.25rem 1.5rem 0;
+}
+
+.wordmark {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ink);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.dash-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#dash-addr {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  background: var(--white);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 2px var(--ink);
+  font-size: 0.95rem;
+}
+
+.btn.ghost {
+  min-height: 2.8rem;
+  padding: 0.7rem 1.2rem;
+  color: var(--ink);
+  background: var(--white);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  font-size: 0.95rem;
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: var(--paper);
+}
+
+.dash-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem 1.5rem 2.5rem;
+  max-width: 56rem;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.dash-body h1 {
+  margin: 0 0 1.25rem;
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  letter-spacing: -0.03em;
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.card {
+  background: var(--white);
+  border: 2px solid var(--ink);
+  border-radius: 1.5rem;
+  padding: 1.4rem 1.5rem 1.6rem;
+}
+
+.card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.35rem;
+}
+
+.balances {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.balances li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 1.05rem;
+}
+
+.balances span {
+  color: var(--muted);
+}
+
+.dash .deposit {
+  width: 100%;
+  align-items: stretch;
+}
+
+.dash .deposit .btn {
+  width: 100%;
+  min-width: 0;
+}
+
 @media (max-width: 640px) {
   .page {
     padding: 0.4rem;
@@ -202,6 +331,12 @@ body {
   .deposit input {
     height: 3.4rem;
     font-size: 1rem;
+  }
+  .dash-grid {
+    grid-template-columns: 1fr;
+  }
+  .dash-bar {
+    padding: 0.9rem 0.9rem 0;
   }
 }
 

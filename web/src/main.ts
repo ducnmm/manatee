@@ -7,6 +7,7 @@ declare global {
   interface Window {
     ethereum?: {
       request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+      on?: (event: string, handler: (...args: unknown[]) => void) => void;
     };
   }
 }
@@ -39,13 +40,49 @@ function shorten(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-function setStatus(html: string, kind: '' | 'ok' | 'err' = ''): void {
-  const el = $('status');
+function setStatus(id: 'status' | 'home-status', html: string, kind: '' | 'ok' | 'err' = ''): void {
+  const el = $(id);
   el.classList.remove('ok', 'err');
   if (kind) {
     el.classList.add(kind);
   }
   el.innerHTML = html;
+}
+
+function showHome(): void {
+  $('home').hidden = false;
+  $('dash').hidden = true;
+}
+
+function showDash(): void {
+  $('home').hidden = true;
+  $('dash').hidden = false;
+  $('dash-addr').textContent = `${shorten(account)} · Sepolia`;
+}
+
+function fmtAmount(value: string): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
+    return value;
+  }
+  return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+}
+
+async function refreshDash(): Promise<void> {
+  if (!account) {
+    return;
+  }
+  try {
+    const bal = await api(`/api/balances?address=${account}`);
+    $('bal-eth').textContent = fmtAmount(String(bal.sepoliaEth));
+    $('bal-mtee').textContent = fmtAmount(String(bal.sepoliaMtee));
+    $('bal-cc3').textContent = fmtAmount(String(bal.creditcoinMtee));
+    if (bal.handle) {
+      ($('handle') as HTMLInputElement).value = `@${bal.handle}`;
+    }
+  } catch (error) {
+    setStatus('status', error instanceof Error ? error.message : String(error), 'err');
+  }
 }
 
 async function api(path: string, init?: RequestInit) {
@@ -88,7 +125,7 @@ async function ensureSepolia(): Promise<void> {
 
 async function connect() {
   if (!window.ethereum) {
-    throw new Error('install MetaMask');
+    throw new Error('install a wallet (Phantom / MetaMask)');
   }
   const accounts = (await window.ethereum.request({
     method: 'eth_requestAccounts',
@@ -98,12 +135,59 @@ async function connect() {
   if (!account) {
     throw new Error('no account');
   }
-  $('connect').textContent = `${shorten(account)} · Sepolia`;
   return account;
 }
 
+async function enterDash(): Promise<void> {
+  showDash();
+  await refreshDash();
+}
+
+async function resumeSession(): Promise<void> {
+  if (!window.ethereum) {
+    return;
+  }
+  const accounts = (await window.ethereum.request({ method: 'eth_accounts' })) as string[];
+  if (!accounts[0]) {
+    return;
+  }
+  account = accounts[0];
+  try {
+    await ensureSepolia();
+  } catch {
+    // still open the dashboard; faucet/connect can retry the switch
+  }
+  await enterDash();
+}
+
+function bindProvider(): void {
+  window.ethereum?.on?.('accountsChanged', (accounts: unknown) => {
+    const list = Array.isArray(accounts) ? (accounts as string[]) : [];
+    if (!list[0]) {
+      account = '';
+      showHome();
+      return;
+    }
+    account = list[0];
+    void enterDash();
+  });
+}
+
 $('connect').onclick = () =>
-  connect().catch((e) => setStatus(e instanceof Error ? e.message : String(e), 'err'));
+  connect()
+    .then(() => enterDash())
+    .catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
+
+$('disconnect').onclick = () => {
+  account = '';
+  setStatus('status', '');
+  setStatus('home-status', '');
+  showHome();
+};
+
+$('home-link').onclick = () => {
+  showHome();
+};
 
 $('deposit').onsubmit = async (event) => {
   event.preventDefault();
@@ -119,21 +203,26 @@ $('deposit').onsubmit = async (event) => {
         method: 'POST',
         body: JSON.stringify({ handle, address: account }),
       });
-      setStatus(`registered @${escapeHtml(registered.handle)}`, 'ok');
+      setStatus('status', `registered @${escapeHtml(registered.handle)}`, 'ok');
     }
     const out = await api('/api/faucet', {
       method: 'POST',
       body: JSON.stringify({ address: account }),
     });
     setStatus(
+      'status',
       `+10 mtee <a href="${out.url}" target="_blank" rel="noreferrer">${shorten(out.tx)}</a>`,
       'ok',
     );
+    await refreshDash();
   } catch (e) {
-    setStatus(e instanceof Error ? e.message : String(e), 'err');
+    setStatus('status', e instanceof Error ? e.message : String(e), 'err');
   } finally {
     faucet.disabled = false;
   }
 };
 
-void loadCfg();
+void loadCfg()
+  .then(() => resumeSession())
+  .catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
+bindProvider();

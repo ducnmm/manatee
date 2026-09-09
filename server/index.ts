@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { extname, join } from 'node:path';
-import { Contract, JsonRpcProvider, Wallet, parseUnits } from 'ethers';
+import { Contract, JsonRpcProvider, Wallet, formatEther, isAddress, parseUnits } from 'ethers';
 
 import { TOKEN_ABI } from '../lib/abi';
 import { loadActivity, patchActivityBySepolia, pushActivity } from '../lib/activity';
@@ -86,6 +86,36 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       sepoliaChainId: 11155111,
       creditcoinChainId: 102031,
       bot: process.env.X_BOT_HANDLE ?? 'manatee',
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/balances' && req.method === 'GET') {
+    const address = url.searchParams.get('address') ?? '';
+    if (!isAddress(address)) {
+      throw new Error('invalid address');
+    }
+    const cfg = loadConfig();
+    if (!cfg.sourceRpc || !cfg.sepoliaMtee) {
+      throw new Error('deploy first / set .env');
+    }
+    const sepolia = new JsonRpcProvider(cfg.sourceRpc);
+    const token = new Contract(cfg.sepoliaMtee, TOKEN_ABI, sepolia);
+    const [eth, mtee] = await Promise.all([sepolia.getBalance(address), token.balanceOf(address)]);
+    let creditcoinMtee = '0';
+    if (cfg.creditcoinRpc && cfg.creditcoinMtee) {
+      const cc3 = new JsonRpcProvider(cfg.creditcoinRpc);
+      const ccToken = new Contract(cfg.creditcoinMtee, TOKEN_ABI, cc3);
+      creditcoinMtee = formatEther(await ccToken.balanceOf(address));
+    }
+    const registry = listRegistry();
+    const handle = Object.entries(registry).find(([, value]) => value.toLowerCase() === address.toLowerCase())?.[0];
+    json(res, 200, {
+      address,
+      handle: handle ?? null,
+      sepoliaEth: formatEther(eth),
+      sepoliaMtee: formatEther(mtee),
+      creditcoinMtee,
     });
     return;
   }
