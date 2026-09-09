@@ -234,6 +234,7 @@ body {
   border-radius: 999px;
   box-shadow: inset 0 0 0 2px var(--ink);
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 .btn.ghost {
@@ -337,6 +338,16 @@ body {
   }
   .dash-bar {
     padding: 0.9rem 0.9rem 0;
+  }
+  #dash-addr {
+    min-height: 2.6rem;
+    padding: 0 0.75rem;
+    font-size: 0.8rem;
+  }
+  .btn.ghost {
+    min-height: 2.6rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
   }
 }
 
