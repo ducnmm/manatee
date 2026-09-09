@@ -6,10 +6,10 @@
     <title>manatee</title>
     <meta name="theme-color" content="#171717" />
     <meta name="description" content="Get test mtee, then send on X." />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" href="/favicon.ico?v=7" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=7" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=7" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=7" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,9 +23,28 @@
     <div class="page">
       <div class="stage">
         <section id="home" class="hero">
-          <img class="mascot" src="/manatee-home-mascot.png" alt="" draggable="false" />
-          <button id="connect" type="button" class="btn">Connect wallet</button>
-          <p id="home-status" class="status"></p>
+          <button id="connect" type="button" class="btn corner">Connect wallet</button>
+          <div class="home-cluster">
+            <img class="mascot" src="/manatee-home-mascot.png" alt="" draggable="false" />
+            <form id="home-search" class="search" autocomplete="off" role="search">
+              <label class="sr-only" for="query">Search handle</label>
+              <div class="search-field">
+                <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2.4" />
+                  <path
+                    d="M16.5 16.5L21 21"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                <input id="query" placeholder="@alice" />
+              </div>
+            </form>
+            <ul id="search-results" class="results"></ul>
+            <p id="home-status" class="status"></p>
+          </div>
         </section>
 
         <section id="dash" class="dash" hidden>
@@ -50,8 +69,6 @@
               <article class="card">
                 <h2>Get mtee</h2>
                 <form id="deposit" class="deposit" autocomplete="off">
-                  <label class="sr-only" for="handle">X handle</label>
-                  <input id="handle" placeholder="@alice" />
                   <button id="faucet" type="submit" class="btn">Get 10 mtee →</button>
                 </form>
                 <p id="status" class="status"></p>

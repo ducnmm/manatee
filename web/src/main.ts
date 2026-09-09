@@ -3,6 +3,8 @@ type Cfg = {
   sepoliaChainId: number;
 };
 
+type SearchAccount = { handle: string; address: string };
+
 declare global {
   interface Window {
     ethereum?: {
@@ -49,9 +51,14 @@ function setStatus(id: 'status' | 'home-status', html: string, kind: '' | 'ok' |
   el.innerHTML = html;
 }
 
+function updateConnectButton(): void {
+  $('connect').textContent = account ? 'Dashboard' : 'Connect wallet';
+}
+
 function showHome(): void {
   $('home').hidden = false;
   $('dash').hidden = true;
+  updateConnectButton();
 }
 
 function showDash(): void {
@@ -68,6 +75,26 @@ function fmtAmount(value: string): string {
   return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
 
+function renderResults(accounts: SearchAccount[], query: string): void {
+  const list = $('search-results');
+  list.replaceChildren();
+  $('home').classList.toggle('has-results', accounts.length > 0);
+  if (accounts.length === 0) {
+    setStatus('home-status', `No accounts found for “${escapeHtml(query)}”`, 'err');
+    return;
+  }
+  setStatus('home-status', '');
+  for (const row of accounts) {
+    const item = document.createElement('li');
+    const handle = document.createElement('span');
+    handle.textContent = `@${row.handle}`;
+    const address = document.createElement('strong');
+    address.textContent = shorten(row.address);
+    item.append(handle, address);
+    list.append(item);
+  }
+}
+
 async function refreshDash(): Promise<void> {
   if (!account) {
     return;
@@ -77,9 +104,6 @@ async function refreshDash(): Promise<void> {
     $('bal-eth').textContent = fmtAmount(String(bal.sepoliaEth));
     $('bal-mtee').textContent = fmtAmount(String(bal.sepoliaMtee));
     $('bal-cc3').textContent = fmtAmount(String(bal.creditcoinMtee));
-    if (bal.handle) {
-      ($('handle') as HTMLInputElement).value = `@${bal.handle}`;
-    }
   } catch (error) {
     setStatus('status', error instanceof Error ? error.message : String(error), 'err');
   }
@@ -135,10 +159,20 @@ async function connect() {
   if (!account) {
     throw new Error('no account');
   }
+  updateConnectButton();
   return account;
 }
 
 async function enterDash(): Promise<void> {
+  if (!account) {
+    await connect();
+  } else {
+    try {
+      await ensureSepolia();
+    } catch {
+      // still open the dashboard; faucet can retry the switch
+    }
+  }
   showDash();
   await refreshDash();
 }
@@ -152,12 +186,7 @@ async function resumeSession(): Promise<void> {
     return;
   }
   account = accounts[0];
-  try {
-    await ensureSepolia();
-  } catch {
-    // still open the dashboard; faucet/connect can retry the switch
-  }
-  await enterDash();
+  updateConnectButton();
 }
 
 function bindProvider(): void {
@@ -169,14 +198,15 @@ function bindProvider(): void {
       return;
     }
     account = list[0];
-    void enterDash();
+    updateConnectButton();
+    if (!$('dash').hidden) {
+      void enterDash();
+    }
   });
 }
 
 $('connect').onclick = () =>
-  connect()
-    .then(() => enterDash())
-    .catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
+  enterDash().catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
 
 $('disconnect').onclick = () => {
   account = '';
@@ -189,6 +219,22 @@ $('home-link').onclick = () => {
   showHome();
 };
 
+$('home-search').onsubmit = async (event) => {
+  event.preventDefault();
+  const query = ($('query') as HTMLInputElement).value.trim();
+  if (!query) {
+    return;
+  }
+  try {
+    const out = await api(`/api/search?q=${encodeURIComponent(query)}`);
+    renderResults((out.accounts ?? []) as SearchAccount[], query);
+  } catch (error) {
+    $('search-results').replaceChildren();
+    $('home').classList.remove('has-results');
+    setStatus('home-status', error instanceof Error ? error.message : String(error), 'err');
+  }
+};
+
 $('deposit').onsubmit = async (event) => {
   event.preventDefault();
   const faucet = $('faucet') as HTMLButtonElement;
@@ -196,14 +242,6 @@ $('deposit').onsubmit = async (event) => {
   try {
     if (!account) {
       await connect();
-    }
-    const handle = ($('handle') as HTMLInputElement).value.trim();
-    if (handle) {
-      const registered = await api('/api/register', {
-        method: 'POST',
-        body: JSON.stringify({ handle, address: account }),
-      });
-      setStatus('status', `registered @${escapeHtml(registered.handle)}`, 'ok');
     }
     const out = await api('/api/faucet', {
       method: 'POST',

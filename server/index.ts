@@ -120,6 +120,20 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     return;
   }
 
+  if (url.pathname === '/api/search' && req.method === 'GET') {
+    const q = (url.searchParams.get('q') ?? '').replace(/^@/, '').trim().toLowerCase();
+    if (!q) {
+      json(res, 200, { accounts: [] });
+      return;
+    }
+    const accounts = Object.entries(listRegistry())
+      .filter(([handle, address]) => handle.includes(q) || address.toLowerCase().includes(q))
+      .map(([handle, address]) => ({ handle, address }))
+      .slice(0, 10);
+    json(res, 200, { accounts });
+    return;
+  }
+
   if (url.pathname === '/api/registry' && req.method === 'GET') {
     json(res, 200, listRegistry());
     return;
