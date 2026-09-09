@@ -380,7 +380,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
-  padding-top: 4.8rem;
+  padding-top: 0.15rem;
 }
 
 .tab {
@@ -411,7 +411,6 @@ body {
 }
 
 .panel {
-  min-height: 18rem;
   padding: 1rem;
   background: var(--white);
   border: 2px solid var(--ink);
