@@ -103,23 +103,10 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     const token = new Contract(cfg.sepoliaMtee, TOKEN_ABI, sepolia);
     const [eth, mtee] = await Promise.all([sepolia.getBalance(address), token.balanceOf(address)]);
     let creditcoinMtee = '0';
-    let creditcoinCtc = '0';
-    if (cfg.creditcoinRpc) {
+    if (cfg.creditcoinRpc && cfg.creditcoinMtee) {
       const cc3 = new JsonRpcProvider(cfg.creditcoinRpc);
-      const jobs: Promise<void>[] = [
-        cc3.getBalance(address).then((value) => {
-          creditcoinCtc = formatEther(value);
-        }),
-      ];
-      if (cfg.creditcoinMtee) {
-        const ccToken = new Contract(cfg.creditcoinMtee, TOKEN_ABI, cc3);
-        jobs.push(
-          ccToken.balanceOf(address).then((value: bigint) => {
-            creditcoinMtee = formatEther(value);
-          }),
-        );
-      }
-      await Promise.all(jobs);
+      const ccToken = new Contract(cfg.creditcoinMtee, TOKEN_ABI, cc3);
+      creditcoinMtee = formatEther(await ccToken.balanceOf(address));
     }
     const registry = listRegistry();
     const handle = Object.entries(registry).find(([, value]) => value.toLowerCase() === address.toLowerCase())?.[0];
@@ -129,7 +116,6 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       sepoliaEth: formatEther(eth),
       sepoliaMtee: formatEther(mtee),
       creditcoinMtee,
-      creditcoinCtc,
     });
     return;
   }

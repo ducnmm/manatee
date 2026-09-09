@@ -202,7 +202,6 @@ async function refreshDash(): Promise<void> {
     $('bal-eth').textContent = fmtAmount(String(bal.sepoliaEth));
     $('bal-mtee').textContent = mtee;
     $('bal-cc3').textContent = fmtAmount(String(bal.creditcoinMtee));
-    $('bal-ctc').textContent = fmtAmount(String(bal.creditcoinCtc ?? '0'));
     $('dash-addr').textContent = bal.handle ? `@${bal.handle}` : shorten(account);
     $('wallet-label').textContent = `Connected · ${shorten(account)}`;
     renderActivity(Array.isArray(activity) ? (activity as ActivityItem[]) : []);
