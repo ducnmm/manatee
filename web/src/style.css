@@ -23,8 +23,7 @@ body {
 }
 
 button,
-.btn,
-.chip code {
+.btn {
   font-family: "Archivo Black", Inter, sans-serif;
 }
 
@@ -188,45 +187,6 @@ input {
   background: #e8f0ff;
 }
 
-.commands {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  width: min(100%, 46rem);
-  margin-top: 1.35rem;
-}
-
-.chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 16px 18px;
-  border-radius: 0;
-  text-align: center;
-}
-
-.chip code {
-  font-size: 16px;
-}
-
-.chip.yellow {
-  background: var(--yellow);
-  color: var(--ink);
-}
-.chip.coral {
-  background: var(--coral);
-  color: var(--white);
-}
-.chip.blue {
-  background: var(--blue);
-  color: var(--white);
-}
-.chip.ink {
-  background: var(--ink);
-  color: var(--white);
-}
-
 @media (max-width: 640px) {
   .page {
     padding: 0.4rem;
@@ -245,9 +205,6 @@ input {
   .deposit input {
     height: 4.4rem;
     font-size: 1.1rem;
-  }
-  .chip code {
-    font-size: 13px;
   }
 }
 
