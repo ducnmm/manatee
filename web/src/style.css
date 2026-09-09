@@ -451,11 +451,13 @@ body {
 
 .panel-stack {
   display: grid;
+  min-height: 16.5rem;
 }
 
 .pane {
   grid-area: 1 / 1;
   min-width: 0;
+  min-height: 16.5rem;
   opacity: 0;
   transform: translateY(8px);
   pointer-events: none;
@@ -474,6 +476,12 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+}
+
+#activity {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 #wallet-bar {
@@ -576,27 +584,57 @@ body {
 }
 
 .activity-list {
-  display: grid;
-  gap: 0.7rem;
-  min-height: 8rem;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-content: start;
+  gap: 0.55rem;
+  min-height: 14.75rem;
+  max-height: 14.75rem;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  padding-right: 0.35rem;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ink) var(--paper);
+}
+
+.activity-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.activity-list::-webkit-scrollbar-track {
+  background: var(--paper);
+  border-radius: 99px;
+}
+
+.activity-list::-webkit-scrollbar-thumb {
+  background: var(--ink);
+  border-radius: 99px;
 }
 
 .activity-list:empty::after {
   content: "No activities yet";
   display: grid;
+  flex: 1;
   place-items: center;
-  min-height: 8rem;
   color: var(--muted);
   font-size: 1.05rem;
 }
 
 .activity-list > * {
   display: flex;
+  flex: 0 0 4.15rem;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 3.4rem;
-  padding: 0.85rem 1.15rem;
+  box-sizing: border-box;
+  height: 4.15rem;
+  min-height: 4.15rem;
+  max-height: 4.15rem;
+  padding: 0 1.1rem;
   color: var(--ink);
   background: var(--paper);
   border: 2px solid var(--ink);
