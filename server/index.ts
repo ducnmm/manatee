@@ -20,8 +20,22 @@ const PORT = Number(process.env.PORT ?? 8787);
 const WEB_DIR = join(process.cwd(), 'web', 'dist');
 const faucetCooldown = new Map<string, number>();
 const processedTweets = loadProcessedTweets();
-const POLL_INTERVAL_SEC = 60;
-const SEARCH_LOOKBACK_SEC = 15 * 60;
+
+function envPositiveSeconds(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) {
+    return fallback;
+  }
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(`${name} must be a positive number of seconds (got ${JSON.stringify(raw)})`);
+  }
+  return n;
+}
+
+/** Demo: POLL_INTERVAL_SEC=5 SEARCH_LOOKBACK_SEC=10 */
+const POLL_INTERVAL_SEC = envPositiveSeconds('POLL_INTERVAL_SEC', 60);
+const SEARCH_LOOKBACK_SEC = envPositiveSeconds('SEARCH_LOOKBACK_SEC', 120);
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   const data = JSON.stringify(body);
@@ -75,6 +89,8 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     json(res, 200, {
       ok: true,
       x: Boolean(process.env.TWITTERAPI_IO_API_KEY),
+      pollIntervalSec: POLL_INTERVAL_SEC,
+      searchLookbackSec: SEARCH_LOOKBACK_SEC,
     });
     return;
   }
@@ -395,7 +411,7 @@ async function pollX(): Promise<void> {
   const bot = process.env.X_BOT_HANDLE ?? 'ManateeWallet';
   const as = process.env.X_REPLY_AS ?? 'ManateeWallet';
   console.log(
-    `X poller on — @${bot.replace(/^@/, '')} every ${POLL_INTERVAL_SEC}s, 1 tweet/poll (replies as @${as.replace(/^@/, '')})`,
+    `X poller on — @${bot.replace(/^@/, '')} every ${POLL_INTERVAL_SEC}s, lookback ${SEARCH_LOOKBACK_SEC}s, 1 tweet/poll (replies as @${as.replace(/^@/, '')})`,
   );
   const pending: XTweet[] = [];
   let busy = false;

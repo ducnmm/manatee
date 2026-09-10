@@ -25,9 +25,8 @@ export function tweetIdFromUnixMs(ms: number): string {
 
 export function buildMentionQuery(bot: string, sinceUnix: number, untilUnix: number): string {
   const handle = bot.replace(/^@/, '');
-  // `to:` catches @-prefixed commands (X treats those as replies). Keep a
-  // wide since_time window — twitterapi.io search lags minutes, and a 5s
-  // lookback drops the tweet before it is indexed.
+  // `to:` catches @-prefixed commands (X treats those as replies).
+  // Window size is SEARCH_LOOKBACK_SEC from the poller.
   return `(@${handle} OR from:${handle} OR to:${handle}) (send OR register) since_time:${sinceUnix} until_time:${untilUnix}`;
 }
 

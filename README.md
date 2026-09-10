@@ -134,7 +134,7 @@ npm run web        # Vite UI with /api proxy         http://127.0.0.1:5173
 ```
 
 - **Web:** connect MetaMask (Sepolia), optional `@handle`, get 10 `mtee`.
-- **X:** tweet `@ManateeWallet send 10 mtee @bob`. Two replies: (1) locked on Sepolia + explorer, waiting Attestcoin ~8–10 min; (2) minted on Creditcoin + explorer. Needs `TWITTERAPI_IO_API_KEY` + login cookies + proxy.
+- **X:** tweet `@ManateeWallet send 10 mtee @bob`. Two replies: (1) locked on Sepolia + explorer, waiting Attestcoin ~8–10 min; (2) minted on Creditcoin + explorer. Needs `TWITTERAPI_IO_API_KEY` + login cookies + proxy. Poller cadence is env: `POLL_INTERVAL_SEC` (default 60) and `SEARCH_LOOKBACK_SEC` (default 120). For a live demo set `POLL_INTERVAL_SEC=5` and `SEARCH_LOOKBACK_SEC=10`.
 
 Parser allowlist is `mtee` only. `ctc` → `ctc is gas`. Unknown tickers / `eth` → reject.
 
