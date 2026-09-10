@@ -12,7 +12,7 @@ Không fork [dugong](https://github.com/ducnmm/dugong). Repo mới, code mới. 
 
 ## 1. Sản phẩm (một câu)
 
-`@manatee send 10 mtee @bob` → lock/burn token trên Sepolia (event có `to` + `amount` + **token**) → worker lấy Merkle + continuity proof → ASC trên Creditcoin mint **đúng token đó** cho Bob.
+`@ManateeWallet send 10 mtee @bob` → lock/burn token trên Sepolia (event có `to` + `amount` + **token**) → worker lấy Merkle + continuity proof → ASC trên Creditcoin mint **đúng token đó** cho Bob.
 
 Cú pháp: `send <amount> <coin> @handle`. `<coin>` bắt buộc, phải nằm trong allowlist. Ticker lạ / `ctc` → reject.
 
