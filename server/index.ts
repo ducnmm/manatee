@@ -5,11 +5,12 @@ import { Contract, JsonRpcProvider, Wallet, formatEther, isAddress, parseUnits }
 
 import { TOKEN_ABI } from '../lib/abi';
 import { patchActivityBySepolia, pushActivity } from '../lib/activity';
-import { listActivityForAddress } from '../lib/history';
+import { listActivityForAddress, listActivityForHandle } from '../lib/history';
 import { handleCommand } from '../lib/command';
 import { creditcoinTxUrl, loadConfig, sepoliaTxUrl } from '../lib/config';
 import { parseCommand } from '../lib/parser';
-import { ensureSeedRegistry, listRegistry } from '../lib/registry';
+import { ensureHandle, ensureSeedRegistry, listRegistry } from '../lib/registry';
+import { exchangeXCode, xOAuthPublicConfig } from '../lib/xauth';
 import { loadProcessedTweets, markTweetProcessed } from '../lib/processed';
 import { fetchTweetById, replyToTweet, searchMentions, tweetIdFromUrl, type XTweet } from '../lib/x';
 import { startChainWorker } from '../worker/index';
@@ -107,6 +108,7 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       sepoliaChainId: 11155111,
       creditcoinChainId: 102031,
       bot: process.env.X_BOT_HANDLE ?? 'ManateeWallet',
+      xLogin: xOAuthPublicConfig(),
     });
     return;
   }
@@ -161,6 +163,11 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
   }
 
   if (url.pathname === '/api/activity' && req.method === 'GET') {
+    const handle = (url.searchParams.get('handle') ?? '').replace(/^@/, '').trim();
+    if (handle) {
+      json(res, 200, await listActivityForHandle(handle));
+      return;
+    }
     const address = url.searchParams.get('address') ?? '';
     if (address) {
       if (!isAddress(address)) {
@@ -170,6 +177,35 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       return;
     }
     json(res, 200, []);
+    return;
+  }
+
+  if (url.pathname === '/api/auth/x' && req.method === 'POST') {
+    const body = JSON.parse(await readBody(req)) as {
+      code?: string;
+      code_verifier?: string;
+      redirect_uri?: string;
+    };
+    if (!body.code || !body.code_verifier || !body.redirect_uri) {
+      throw new Error('missing oauth fields');
+    }
+    const user = await exchangeXCode({
+      code: body.code,
+      codeVerifier: body.code_verifier,
+      redirectUri: body.redirect_uri,
+    });
+    const cfg = loadConfig();
+    if (!cfg.privateKey) {
+      throw new Error('PRIVATE_KEY required to open an X account');
+    }
+    const ensured = ensureHandle(user.username, cfg.privateKey);
+    json(res, 200, {
+      handle: user.username.toLowerCase(),
+      name: user.name,
+      userId: user.id,
+      address: ensured.address,
+      created: ensured.created,
+    });
     return;
   }
 

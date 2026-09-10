@@ -133,7 +133,7 @@ npm run server     # API + chain worker + X poller  http://127.0.0.1:8787
 npm run web        # Vite UI with /api proxy         http://127.0.0.1:5173
 ```
 
-- **Web:** connect MetaMask (Sepolia), optional `@handle`, get 10 `mtee`.
+- **Web:** Continue with X (OAuth, same idea as Dugong) or connect a wallet. The dashboard shows that X handle’s derived address, balances, and send/mint history. Search `@handle` also opens that account.
 - **X:** tweet `@ManateeWallet send 10 mtee @bob`. Two replies: (1) locked on Sepolia + explorer, waiting Attestcoin ~8–10 min; (2) minted on Creditcoin + explorer. Needs `TWITTERAPI_IO_API_KEY` + login cookies + proxy. Poller cadence is env: `POLL_INTERVAL_SEC` (default 60) and `SEARCH_LOOKBACK_SEC` (default 120). For a live demo set `POLL_INTERVAL_SEC=5` and `SEARCH_LOOKBACK_SEC=10`.
 
 Parser allowlist is `mtee` only. `ctc` → `ctc is gas`. Unknown tickers / `eth` → reject.

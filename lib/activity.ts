@@ -76,6 +76,11 @@ export function matchesAddress(item: ActivityItem, address: string): boolean {
   return [item.address, item.from, item.to].some((value) => value?.toLowerCase() === key);
 }
 
+export function matchesHandle(item: ActivityItem, handle: string): boolean {
+  const key = handle.replace(/^@/, '').toLowerCase();
+  return [item.author, item.handle].some((value) => value?.replace(/^@/, '').toLowerCase() === key);
+}
+
 export function mergeActivity(primary: ActivityItem[], extra: ActivityItem[]): ActivityItem[] {
   const byKey = new Map<string, ActivityItem>();
   for (const item of [...extra, ...primary]) {

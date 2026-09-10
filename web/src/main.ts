@@ -1,6 +1,7 @@
 type Cfg = {
   explorers: { sepolia: string; creditcoin: string };
   sepoliaChainId: number;
+  xLogin?: { enabled: boolean; clientId: string; redirectUri: string };
 };
 
 type SearchAccount = { handle: string; address: string };
@@ -13,9 +14,16 @@ type ActivityItem = {
   from?: string;
   to?: string;
   amount?: string;
+  handle?: string;
+  author?: string;
   sepoliaTx?: string;
   creditcoinTx?: string;
 };
+
+type Session = { kind: 'wallet' | 'x'; address: string; handle?: string };
+
+const SESSION_KEY = 'manatee.session';
+const PKCE_KEY = 'manatee.pkce';
 
 declare global {
   interface Window {
@@ -38,7 +46,31 @@ const SEPOLIA = {
 
 let cfg: Cfg | undefined;
 let account = '';
+let sessionHandle = '';
 let copiedTimer = 0;
+
+function saveSession(session: Session): void {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+function loadSession(): Session | undefined {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? (JSON.parse(raw) as Session) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function clearSession(): void {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+function applySession(session: Session): void {
+  account = session.address;
+  sessionHandle = session.handle ?? '';
+  updateConnectButton();
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -66,6 +98,23 @@ function setStatus(id: 'status' | 'home-status', html: string, kind: '' | 'ok' |
 
 function updateConnectButton(): void {
   $('connect').textContent = account ? 'Dashboard' : 'Connect wallet';
+}
+
+function b64url(bytes: Uint8Array): string {
+  let bin = '';
+  bytes.forEach((b) => {
+    bin += String.fromCharCode(b);
+  });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function randomB64Url(size: number): string {
+  return b64url(crypto.getRandomValues(new Uint8Array(size)));
+}
+
+async function sha256B64Url(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return b64url(new Uint8Array(digest));
 }
 
 function closeAccountMenu(): void {
@@ -172,10 +221,19 @@ function activityAmount(item: ActivityItem): string {
   }
   const amount = `${fmtAmount(item.amount)} mtee`;
   const me = account.toLowerCase();
-  if (item.kind === 'send' && item.from?.toLowerCase() === me) {
+  const mine = sessionHandle.toLowerCase();
+  const outgoing =
+    item.from?.toLowerCase() === me ||
+    (Boolean(mine) && item.author?.toLowerCase() === mine && item.handle?.toLowerCase() !== mine);
+  if (item.kind === 'send' && outgoing) {
     return `-${amount}`;
   }
-  if (item.kind === 'faucet' || item.kind === 'mint' || item.to?.toLowerCase() === me) {
+  if (
+    item.kind === 'faucet' ||
+    item.kind === 'mint' ||
+    item.to?.toLowerCase() === me ||
+    (Boolean(mine) && item.handle?.toLowerCase() === mine)
+  ) {
     return `+${amount}`;
   }
   return amount;
@@ -231,8 +289,17 @@ function renderResults(accounts: SearchAccount[], query: string): void {
     const address = document.createElement('strong');
     address.textContent = shorten(row.address);
     item.append(handle, address);
+    item.onclick = () => {
+      void openHandleDash(row.handle, row.address);
+    };
     list.append(item);
   }
+}
+
+async function openHandleDash(handle: string, address: string): Promise<void> {
+  applySession({ kind: 'x', address, handle });
+  saveSession({ kind: 'x', address, handle });
+  await enterDash();
 }
 
 async function refreshDash(): Promise<void> {
@@ -240,17 +307,23 @@ async function refreshDash(): Promise<void> {
     return;
   }
   try {
+    const activityPath = sessionHandle
+      ? `/api/activity?handle=${encodeURIComponent(sessionHandle)}`
+      : `/api/activity?address=${account}`;
     const [bal, activity] = await Promise.all([
       api(`/api/balances?address=${account}`),
-      api(`/api/activity?address=${account}`),
+      api(activityPath),
     ]);
     const mtee = fmtAmount(String(bal.sepoliaMtee));
     $('hero-mtee').textContent = mtee;
     $('bal-eth').textContent = fmtAmount(String(bal.sepoliaEth));
     $('bal-mtee').textContent = mtee;
     $('bal-cc3').textContent = fmtAmount(String(bal.creditcoinMtee));
-    $('dash-addr').textContent = bal.handle ? `@${bal.handle}` : shorten(account);
-    $('wallet-label').textContent = `Connected · ${shorten(account)}`;
+    const shownHandle = sessionHandle || bal.handle;
+    $('dash-addr').textContent = shownHandle ? `@${shownHandle}` : shorten(account);
+    $('wallet-label').textContent = shownHandle
+      ? `@${shownHandle} · ${shorten(account)}`
+      : `Connected · ${shorten(account)}`;
     renderActivity(Array.isArray(activity) ? (activity as ActivityItem[]) : []);
   } catch (error) {
     setStatus('status', error instanceof Error ? error.message : String(error), 'err');
@@ -271,6 +344,8 @@ async function api(path: string, init?: RequestInit) {
 
 async function loadCfg() {
   cfg = await api('/api/config');
+  const login = $('login-x') as HTMLButtonElement;
+  login.hidden = !cfg?.xLogin?.enabled;
 }
 
 async function ensureSepolia(): Promise<void> {
@@ -307,6 +382,8 @@ async function connect() {
   if (!account) {
     throw new Error('no account');
   }
+  sessionHandle = '';
+  saveSession({ kind: 'wallet', address: account });
   updateConnectButton();
   return account;
 }
@@ -326,6 +403,11 @@ async function enterDash(): Promise<void> {
 }
 
 async function resumeSession(): Promise<void> {
+  const saved = loadSession();
+  if (saved?.address) {
+    applySession(saved);
+    return;
+  }
   if (!window.ethereum) {
     return;
   }
@@ -333,8 +415,7 @@ async function resumeSession(): Promise<void> {
   if (!accounts[0]) {
     return;
   }
-  account = accounts[0];
-  updateConnectButton();
+  applySession({ kind: 'wallet', address: accounts[0] });
 }
 
 function bindProvider(): void {
@@ -346,6 +427,8 @@ function bindProvider(): void {
       return;
     }
     account = list[0];
+    sessionHandle = '';
+    saveSession({ kind: 'wallet', address: account });
     updateConnectButton();
     if ($('dash').classList.contains('is-on')) {
       void enterDash();
@@ -385,10 +468,66 @@ $('wallet-bar').onclick = () => {
 
 $('disconnect').onclick = () => {
   account = '';
+  sessionHandle = '';
+  clearSession();
   setStatus('status', '');
   setStatus('home-status', '');
   showHome();
 };
+
+async function startXLogin(): Promise<void> {
+  const oauth = cfg?.xLogin;
+  if (!oauth?.enabled || !oauth.clientId || !oauth.redirectUri) {
+    throw new Error('X login is not configured');
+  }
+  const verifier = randomB64Url(32);
+  const state = randomB64Url(16);
+  const challenge = await sha256B64Url(verifier);
+  sessionStorage.setItem(PKCE_KEY, JSON.stringify({ verifier, state }));
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: oauth.clientId,
+    redirect_uri: oauth.redirectUri,
+    scope: 'tweet.read users.read offline.access',
+    state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+  });
+  window.location.href = `https://x.com/i/oauth2/authorize?${params.toString()}`;
+}
+
+async function finishXLogin(): Promise<boolean> {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('code');
+  const state = params.get('state');
+  if (!code) {
+    return false;
+  }
+  window.history.replaceState({}, '', '/');
+  const stored = sessionStorage.getItem(PKCE_KEY);
+  sessionStorage.removeItem(PKCE_KEY);
+  const pkce = stored ? (JSON.parse(stored) as { verifier?: string; state?: string }) : {};
+  if (!pkce.verifier || !pkce.state || pkce.state !== state) {
+    throw new Error('X login expired — try Continue with X again');
+  }
+  const redirectUri = cfg?.xLogin?.redirectUri;
+  if (!redirectUri) {
+    throw new Error('X login is not configured');
+  }
+  const out = await api('/api/auth/x', {
+    method: 'POST',
+    body: JSON.stringify({
+      code,
+      code_verifier: pkce.verifier,
+      redirect_uri: redirectUri,
+    }),
+  });
+  await openHandleDash(String(out.handle), String(out.address));
+  return true;
+}
+
+$('login-x').onclick = () =>
+  startXLogin().catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
 
 $('home-link').onclick = () => {
   showHome();
@@ -444,6 +583,11 @@ $('faucet').onclick = async () => {
 };
 
 void loadCfg()
-  .then(() => resumeSession())
+  .then(async () => {
+    if (await finishXLogin()) {
+      return;
+    }
+    await resumeSession();
+  })
   .catch((e) => setStatus('home-status', e instanceof Error ? e.message : String(e), 'err'));
 bindProvider();

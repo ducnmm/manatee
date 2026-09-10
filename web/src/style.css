@@ -108,11 +108,46 @@ body {
   cursor: not-allowed;
 }
 
-.corner {
+.home-actions {
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
   z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: calc(100% - 1.5rem);
+}
+
+.home-actions .btn {
+  min-height: 2.85rem;
+  padding: 0.7rem 1.15rem;
+  font-size: 0.95rem;
+}
+
+.corner,
+.corner-x {
+  position: static;
+}
+
+.btn.ghost {
+  color: var(--ink);
+  background: var(--white);
+  border: 2px solid var(--ink);
+}
+
+.btn.ghost:hover:not(:disabled) {
+  background: var(--yellow);
+}
+
+.results li {
+  cursor: pointer;
+}
+
+.results li:hover {
+  background: color-mix(in srgb, var(--yellow) 35%, white);
 }
 
 .hero {

@@ -1,8 +1,9 @@
 import { Contract, EventLog, JsonRpcProvider, ZeroAddress, formatEther } from 'ethers';
 
 import { LOCK_ABI, MINT_ABI, TOKEN_ABI } from './abi';
-import { type ActivityItem, loadActivity, matchesAddress, mergeActivity } from './activity';
+import { type ActivityItem, loadActivity, matchesAddress, matchesHandle, mergeActivity } from './activity';
 import { loadConfig } from './config';
+import { listRegistry } from './registry';
 
 const LOOKBACK_BLOCKS = 12_000;
 const cache = new Map<string, { at: number; items: ActivityItem[] }>();
@@ -151,4 +152,12 @@ export async function listActivityForAddress(address: string): Promise<ActivityI
     }
   }
   return mergeActivity(stored, chain).slice(0, 50);
+}
+
+export async function listActivityForHandle(handle: string): Promise<ActivityItem[]> {
+  const key = handle.replace(/^@/, '').toLowerCase();
+  const address = listRegistry()[key];
+  const byHandle = loadActivity().filter((item) => matchesHandle(item, key));
+  const byAddress = address ? await listActivityForAddress(address) : [];
+  return mergeActivity(byHandle, byAddress).slice(0, 50);
 }
