@@ -3,6 +3,7 @@
 .env.local
 registry.json
 activity.json
+data/
 .railway/
 
 # node

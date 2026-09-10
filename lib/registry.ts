@@ -2,12 +2,14 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isAddress, getAddress } from 'ethers';
 
+import { dataFile } from './paths';
+
 export type Registry = Record<string, string>;
 
 const HANDLE_BODY_RE = /^[a-z0-9_]+$/;
 
 export function registryPath(filePath?: string): string {
-  return filePath ?? process.env.REGISTRY_PATH ?? './registry.json';
+  return filePath ?? process.env.REGISTRY_PATH ?? dataFile('registry.json');
 }
 
 export function ensureSeedRegistry(): void {

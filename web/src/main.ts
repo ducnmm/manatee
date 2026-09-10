@@ -7,8 +7,12 @@ type SearchAccount = { handle: string; address: string };
 
 type ActivityItem = {
   at: string;
+  kind?: string;
   source: string;
   text: string;
+  from?: string;
+  to?: string;
+  amount?: string;
   sepoliaTx?: string;
   creditcoinTx?: string;
 };
@@ -130,8 +134,20 @@ function relTime(iso: string): string {
   return `${value} ${unit[0]}${value === 1 ? '' : 's'} ago`;
 }
 
-function activityLabel(text: string): string {
-  const lower = text.toLowerCase();
+function activityLabel(item: ActivityItem): string {
+  if (item.kind === 'faucet') {
+    return 'Deposit';
+  }
+  if (item.kind === 'send') {
+    return 'Transfer';
+  }
+  if (item.kind === 'mint') {
+    return 'Mint';
+  }
+  if (item.kind === 'register') {
+    return 'Register';
+  }
+  const lower = item.text.toLowerCase();
   if (lower.includes('faucet')) {
     return 'Deposit';
   }
@@ -144,7 +160,25 @@ function activityLabel(text: string): string {
   if (lower.includes('register')) {
     return 'Register';
   }
-  return text;
+  return item.text;
+}
+
+function activityAmount(item: ActivityItem): string {
+  if (!item.amount) {
+    if (item.kind === 'faucet' || item.text.toLowerCase().includes('faucet')) {
+      return '+10 mtee';
+    }
+    return '';
+  }
+  const amount = `${fmtAmount(item.amount)} mtee`;
+  const me = account.toLowerCase();
+  if (item.kind === 'send' && item.from?.toLowerCase() === me) {
+    return `-${amount}`;
+  }
+  if (item.kind === 'faucet' || item.kind === 'mint' || item.to?.toLowerCase() === me) {
+    return `+${amount}`;
+  }
+  return amount;
 }
 
 function renderActivity(items: ActivityItem[]): void {
@@ -163,12 +197,13 @@ function renderActivity(items: ActivityItem[]): void {
       row.rel = 'noreferrer';
     }
     const title = document.createElement('span');
-    title.textContent = activityLabel(item.text);
+    title.textContent = activityLabel(item);
     const meta = document.createElement('span');
     meta.className = 'meta';
-    if (item.text.toLowerCase().includes('faucet')) {
+    const amountText = activityAmount(item);
+    if (amountText) {
       const amount = document.createElement('strong');
-      amount.textContent = '+10 mtee';
+      amount.textContent = amountText;
       meta.append(amount);
     }
     const when = document.createElement('span');
@@ -207,7 +242,7 @@ async function refreshDash(): Promise<void> {
   try {
     const [bal, activity] = await Promise.all([
       api(`/api/balances?address=${account}`),
-      api('/api/activity'),
+      api(`/api/activity?address=${account}`),
     ]);
     const mtee = fmtAmount(String(bal.sepoliaMtee));
     $('hero-mtee').textContent = mtee;

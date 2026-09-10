@@ -4,7 +4,8 @@ import { extname, join } from 'node:path';
 import { Contract, JsonRpcProvider, Wallet, formatEther, isAddress, parseUnits } from 'ethers';
 
 import { TOKEN_ABI } from '../lib/abi';
-import { loadActivity, patchActivityBySepolia, pushActivity } from '../lib/activity';
+import { patchActivityBySepolia, pushActivity } from '../lib/activity';
+import { listActivityForAddress } from '../lib/history';
 import { handleCommand } from '../lib/command';
 import { creditcoinTxUrl, loadConfig, sepoliaTxUrl } from '../lib/config';
 import { parseCommand } from '../lib/parser';
@@ -141,7 +142,15 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
   }
 
   if (url.pathname === '/api/activity' && req.method === 'GET') {
-    json(res, 200, loadActivity());
+    const address = url.searchParams.get('address') ?? '';
+    if (address) {
+      if (!isAddress(address)) {
+        throw new Error('invalid address');
+      }
+      json(res, 200, await listActivityForAddress(address));
+      return;
+    }
+    json(res, 200, []);
     return;
   }
 
@@ -152,7 +161,15 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       text: `register @${handle} ${body.address}`,
       execute: false,
     });
-    pushActivity({ source: 'web', text: `register @${body.handle}`, author: body.handle });
+    pushActivity({
+      source: 'web',
+      kind: 'register',
+      text: `register @${body.handle}`,
+      author: body.handle,
+      handle: handle,
+      address: body.address,
+      to: body.address,
+    });
     json(res, 200, out);
     return;
   }
@@ -163,7 +180,15 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       throw new Error('missing address');
     }
     const tx = await faucetTo(body.address);
-    pushActivity({ source: 'web', text: 'faucet 10 mtee', sepoliaTx: tx });
+    pushActivity({
+      source: 'web',
+      kind: 'faucet',
+      text: 'faucet 10 mtee',
+      address: body.address,
+      to: body.address,
+      amount: '10',
+      sepoliaTx: tx,
+    });
     json(res, 200, { tx, url: sepoliaTxUrl(tx) });
     return;
   }
@@ -184,8 +209,13 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     });
     pushActivity({
       source: 'web',
+      kind: out.kind === 'send' ? 'send' : 'register',
       text: body.text,
       author: body.author,
+      address: out.kind === 'send' ? out.to : out.address,
+      to: out.kind === 'send' ? out.to : out.address,
+      amount: out.kind === 'send' ? out.amount : undefined,
+      handle: out.handle,
       sepoliaTx: out.kind === 'send' ? out.sepoliaTx : undefined,
       creditcoinTx: out.kind === 'send' ? out.creditcoinTx : undefined,
     });
@@ -204,6 +234,7 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     }
     pushActivity({
       source: 'web',
+      kind: 'send',
       text: body.text ?? 'send',
       author: body.author,
       sepoliaTx: body.sepoliaTx,
@@ -229,8 +260,13 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     });
     pushActivity({
       source: 'x',
+      kind: out.kind === 'send' ? 'send' : 'register',
       text: tweet.text,
       author: tweet.author,
+      address: out.kind === 'send' ? out.to : out.address,
+      to: out.kind === 'send' ? out.to : out.address,
+      amount: out.kind === 'send' ? out.amount : undefined,
+      handle: out.handle,
       sepoliaTx: out.kind === 'send' ? out.sepoliaTx : undefined,
       creditcoinTx: out.kind === 'send' ? out.creditcoinTx : undefined,
     });
@@ -290,6 +326,7 @@ async function processXTweet(tweet: XTweet, replyAs: string): Promise<void> {
       onLocked: async (sepoliaTx) => {
         pushActivity({
           source: 'x',
+          kind: 'send',
           text: tweet.text,
           author: tweet.author,
           sepoliaTx,
@@ -309,7 +346,15 @@ async function processXTweet(tweet: XTweet, replyAs: string): Promise<void> {
     if (sepoliaTx && creditcoinTx) {
       patchActivityBySepolia(sepoliaTx, { creditcoinTx });
     } else if (out.kind === 'register') {
-      pushActivity({ source: 'x', text: tweet.text, author: tweet.author });
+      pushActivity({
+        source: 'x',
+        kind: 'register',
+        text: tweet.text,
+        author: tweet.author,
+        handle: out.handle,
+        address: out.address,
+        to: out.address,
+      });
     }
     let r2 = '';
     if (out.kind === 'send' && creditcoinTx) {

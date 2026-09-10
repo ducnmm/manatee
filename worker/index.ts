@@ -78,7 +78,7 @@ export async function startChainWorker(): Promise<void> {
       processed.add(txHash);
       pending.delete(txHash);
       attempts.delete(txHash);
-      patchActivityBySepolia(txHash, { creditcoinTx: minted.txHash });
+      patchActivityBySepolia(txHash, { kind: 'mint', creditcoinTx: minted.txHash, text: 'mint' });
       console.log(creditcoinTxUrl(minted.txHash));
       if (minted.mintEvent) {
         console.log(

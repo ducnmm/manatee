@@ -5,6 +5,7 @@ export const LOCK_ABI = [
 ] as const;
 
 export const TOKEN_ABI = [
+  'event Transfer(address indexed from, address indexed to, uint256 value)',
   'function approve(address,uint256) returns (bool)',
   'function allowance(address,address) view returns (uint256)',
   'function balanceOf(address) view returns (uint256)',
