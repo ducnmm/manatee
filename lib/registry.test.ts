@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { getAddress } from 'ethers';
 
-import { loadRegistry, registerHandle, resolveHandle, saveRegistry } from './registry';
+import { deriveWallet, ensureHandle, loadRegistry, registerHandle, resolveHandle, saveRegistry } from './registry';
 
 const ADDR_A = '0x1234567890123456789012345678901234567890';
 const ADDR_B = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
@@ -57,6 +57,23 @@ test('resolveHandle throws a clear error for unknown handles', () => {
 test('registerHandle rejects invalid address and handle', () => {
   assert.throws(() => registerHandle('@bob', '0x123', file), /invalid address/);
   assert.throws(() => registerHandle('@bob!', ADDR_A, file), /invalid handle/);
+});
+
+test('ensureHandle creates a deterministic address for a new handle', () => {
+  const first = ensureHandle('@Xwallet', 'test-secret', file);
+  const second = ensureHandle('xwallet', 'test-secret', file);
+  assert.equal(first.created, true);
+  assert.equal(second.created, false);
+  assert.equal(first.address, second.address);
+  assert.equal(first.address, deriveWallet('xwallet', 'test-secret').address);
+  assert.equal(resolveHandle('@Xwallet', file), first.address);
+});
+
+test('ensureHandle does not overwrite a registered handle', () => {
+  registerHandle('@bob', ADDR_A, file);
+  const out = ensureHandle('@bob', 'test-secret', file);
+  assert.equal(out.created, false);
+  assert.equal(out.address, getAddress(ADDR_A));
 });
 
 test('saveRegistry / loadRegistry round-trip via REGISTRY_PATH env', () => {

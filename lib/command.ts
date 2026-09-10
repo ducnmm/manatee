@@ -3,7 +3,7 @@ import { parseUnits } from 'ethers';
 import { mintOnCreditcoin, sendOnSepolia } from './bridge';
 import { loadConfig, requireDeployed } from './config';
 import { parseCommand } from './parser';
-import { registerHandle, resolveHandle } from './registry';
+import { ensureHandle, registerHandle } from './registry';
 
 export type CommandOutcome =
   | { kind: 'register'; handle: string; address: string }
@@ -14,6 +14,7 @@ export type CommandOutcome =
       handle: string;
       to: string;
       amountWei: string;
+      created?: boolean;
       sepoliaTx?: string;
       creditcoinTx?: string;
     };
@@ -35,7 +36,12 @@ export async function handleCommand(args: {
     return { kind: 'register', handle, address };
   }
 
-  const to = resolveHandle(parsed.handle);
+  const cfg = loadConfig();
+  if (!cfg.privateKey) {
+    throw new Error('PRIVATE_KEY required to resolve handles');
+  }
+  const ensured = ensureHandle(parsed.handle, cfg.privateKey);
+  const to = ensured.address;
   const amountWei = parseUnits(parsed.amount, 18);
   const outcome: CommandOutcome = {
     kind: 'send',
@@ -43,6 +49,7 @@ export async function handleCommand(args: {
     coin: 'mtee',
     handle: parsed.handle,
     to,
+    created: ensured.created,
     amountWei: amountWei.toString(),
   };
 
@@ -50,8 +57,8 @@ export async function handleCommand(args: {
     return outcome;
   }
 
-  const cfg = requireDeployed(loadConfig());
-  const locked = await sendOnSepolia({ token: cfg.sepoliaMtee, to, amountWei });
+  const deployed = requireDeployed(loadConfig());
+  const locked = await sendOnSepolia({ token: deployed.sepoliaMtee, to, amountWei });
   outcome.sepoliaTx = locked.txHash;
   await args.onLocked?.(locked.txHash);
   const minted = await mintOnCreditcoin(locked.txHash);

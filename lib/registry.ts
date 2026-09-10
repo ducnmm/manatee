@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { isAddress, getAddress } from 'ethers';
+import { Wallet, getAddress, isAddress, keccak256, toUtf8Bytes } from 'ethers';
 
 import { dataFile } from './paths';
 
@@ -72,6 +72,26 @@ export function resolveHandle(handle: string, filePath?: string): string {
     throw new Error(`unknown handle "@${key}" — register it first`);
   }
   return address;
+}
+
+export function deriveWallet(handle: string, secret: string): Wallet {
+  const key = normalizeHandle(handle);
+  return new Wallet(keccak256(toUtf8Bytes(`manatee:v1:${secret}:${key}`)));
+}
+
+export function ensureHandle(
+  handle: string,
+  secret: string,
+  filePath?: string,
+): { address: string; created: boolean } {
+  const key = normalizeHandle(handle);
+  const registry = loadRegistry(filePath);
+  if (registry[key]) {
+    return { address: getAddress(registry[key]!), created: false };
+  }
+  const address = deriveWallet(key, secret).address;
+  registerHandle(key, address, filePath);
+  return { address, created: true };
 }
 
 function normalizeHandle(handle: string): string {

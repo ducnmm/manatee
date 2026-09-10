@@ -329,6 +329,7 @@ async function processXTweet(tweet: XTweet, replyAs: string): Promise<void> {
           kind: 'send',
           text: tweet.text,
           author: tweet.author,
+          handle: tweet.author,
           sepoliaTx,
         });
         const r1 = `submitted — locked on Sepolia, waiting Attestcoin confirm ~8-10 min (not minted yet)\n${sepoliaTxUrl(sepoliaTx)}`;
@@ -358,7 +359,8 @@ async function processXTweet(tweet: XTweet, replyAs: string): Promise<void> {
     }
     let r2 = '';
     if (out.kind === 'send' && creditcoinTx) {
-      r2 = `confirmed — minted ${out.amount} mtee to @${out.handle} on Creditcoin\n${creditcoinTxUrl(creditcoinTx)}`;
+      const created = out.created ? ` (new account ${out.to})` : '';
+      r2 = `confirmed — minted ${out.amount} mtee to @${out.handle}${created} on Creditcoin\n${creditcoinTxUrl(creditcoinTx)}`;
       console.log(`X minted ${creditcoinTxUrl(creditcoinTx)}`);
     } else if (out.kind === 'register') {
       r2 = `registered @${out.handle} -> ${out.address}`;
