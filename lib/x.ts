@@ -24,8 +24,8 @@ export function tweetIdFromUnixMs(ms: number): string {
 }
 
 export function buildMentionQuery(bot: string, sinceUnix: number, untilUnix: number): string {
-  const mention = bot.startsWith('@') ? bot : `@${bot}`;
-  return `${mention} (send OR register) since_time:${sinceUnix} until_time:${untilUnix}`;
+  const handle = bot.replace(/^@/, '');
+  return `(@${handle} OR from:${handle}) (send OR register) since_time:${sinceUnix} until_time:${untilUnix}`;
 }
 
 export async function searchMentions(sinceId?: string, sinceUnix?: number): Promise<XTweet[]> {
