@@ -89,6 +89,7 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     json(res, 200, {
       ok: true,
       x: Boolean(process.env.TWITTERAPI_IO_API_KEY),
+      xPost: Boolean(process.env.TWITTERAPI_IO_LOGIN_COOKIES && process.env.TWITTERAPI_IO_PROXY),
       pollIntervalSec: POLL_INTERVAL_SEC,
       searchLookbackSec: SEARCH_LOOKBACK_SEC,
     });
@@ -272,24 +273,15 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
     }
     const tweet = await fetchTweetById(id);
     if (body.execute) {
-      markTweetProcessed(processedTweets, tweet.id);
+      const as = process.env.X_REPLY_AS ?? 'ManateeWallet';
+      void processXTweet(tweet, as);
+      json(res, 202, { tweet, accepted: true });
+      return;
     }
     const out = await handleCommand({
       text: tweet.text,
       author: tweet.author,
-      execute: Boolean(body.execute),
-    });
-    pushActivity({
-      source: 'x',
-      kind: out.kind === 'send' ? 'send' : 'register',
-      text: tweet.text,
-      author: tweet.author,
-      address: out.kind === 'send' ? out.to : out.address,
-      to: out.kind === 'send' ? out.to : out.address,
-      amount: out.kind === 'send' ? out.amount : undefined,
-      handle: out.handle,
-      sepoliaTx: out.kind === 'send' ? out.sepoliaTx : undefined,
-      creditcoinTx: out.kind === 'send' ? out.creditcoinTx : undefined,
+      execute: false,
     });
     json(res, 200, { tweet, result: out });
     return;

@@ -116,9 +116,14 @@ export async function createTweet(text: string, replyToTweetId?: string): Promis
   if (!res.ok) {
     throw new Error(`create_tweet_v2 HTTP ${res.status}: ${raw}`);
   }
-  const parsed = JSON.parse(raw) as { status?: string; msg?: string; tweet_id?: string };
+  const parsed = JSON.parse(raw) as {
+    status?: string;
+    msg?: string;
+    message?: string;
+    tweet_id?: string;
+  };
   if (!parsed.status || parsed.status.toLowerCase() !== 'success' || !parsed.tweet_id) {
-    throw new Error(`create_tweet_v2 failed: ${parsed.msg ?? raw}`);
+    throw new Error(`create_tweet_v2 failed: ${parsed.msg ?? parsed.message ?? raw}`);
   }
   return parsed.tweet_id;
 }
