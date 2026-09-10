@@ -25,7 +25,10 @@ export function tweetIdFromUnixMs(ms: number): string {
 
 export function buildMentionQuery(bot: string, sinceUnix: number, untilUnix: number): string {
   const handle = bot.replace(/^@/, '');
-  return `(@${handle} OR from:${handle}) (send OR register) since_time:${sinceUnix} until_time:${untilUnix}`;
+  // `to:` catches @-prefixed commands (X treats those as replies). Keep a
+  // wide since_time window — twitterapi.io search lags minutes, and a 5s
+  // lookback drops the tweet before it is indexed.
+  return `(@${handle} OR from:${handle} OR to:${handle}) (send OR register) since_time:${sinceUnix} until_time:${untilUnix}`;
 }
 
 export async function searchMentions(sinceId?: string, sinceUnix?: number): Promise<XTweet[]> {

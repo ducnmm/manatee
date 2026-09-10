@@ -10,6 +10,7 @@ import { handleCommand } from '../lib/command';
 import { creditcoinTxUrl, loadConfig, sepoliaTxUrl } from '../lib/config';
 import { parseCommand } from '../lib/parser';
 import { ensureSeedRegistry, listRegistry } from '../lib/registry';
+import { loadProcessedTweets, markTweetProcessed } from '../lib/processed';
 import { fetchTweetById, replyToTweet, searchMentions, tweetIdFromUrl, type XTweet } from '../lib/x';
 import { startChainWorker } from '../worker/index';
 
@@ -18,8 +19,9 @@ ensureSeedRegistry();
 const PORT = Number(process.env.PORT ?? 8787);
 const WEB_DIR = join(process.cwd(), 'web', 'dist');
 const faucetCooldown = new Map<string, number>();
-const processedTweets = new Set<string>();
+const processedTweets = loadProcessedTweets();
 const POLL_INTERVAL_SEC = 60;
+const SEARCH_LOOKBACK_SEC = 15 * 60;
 
 function json(res: ServerResponse, status: number, body: unknown): void {
   const data = JSON.stringify(body);
@@ -253,6 +255,9 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       throw new Error('not an X status URL');
     }
     const tweet = await fetchTweetById(id);
+    if (body.execute) {
+      markTweetProcessed(processedTweets, tweet.id);
+    }
     const out = await handleCommand({
       text: tweet.text,
       author: tweet.author,
@@ -316,7 +321,7 @@ async function processXTweet(tweet: XTweet, replyAs: string): Promise<void> {
   if (processedTweets.has(tweet.id)) {
     return;
   }
-  processedTweets.add(tweet.id);
+  markTweetProcessed(processedTweets, tweet.id);
   console.log(`X @${tweet.author}: ${tweet.text}`);
   try {
     const out = await handleCommand({
@@ -393,18 +398,11 @@ async function pollX(): Promise<void> {
     `X poller on — @${bot.replace(/^@/, '')} every ${POLL_INTERVAL_SEC}s, 1 tweet/poll (replies as @${as.replace(/^@/, '')})`,
   );
   const pending: XTweet[] = [];
-  let sinceId: string | undefined;
-  let sinceUnix = Math.floor(Date.now() / 1000) - (POLL_INTERVAL_SEC + 5);
   let busy = false;
   for (;;) {
     try {
-      const tweets = await searchMentions(sinceId, sinceUnix);
-      sinceUnix = Math.floor(Date.now() / 1000) - 5;
-      for (const tweet of tweets) {
-        if (!sinceId || BigInt(tweet.id) > BigInt(sinceId)) {
-          sinceId = tweet.id;
-        }
-      }
+      const sinceUnix = Math.floor(Date.now() / 1000) - SEARCH_LOOKBACK_SEC;
+      const tweets = await searchMentions(undefined, sinceUnix);
       const commands = tweets
         .slice()
         .sort((a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : 1))
@@ -413,7 +411,7 @@ async function pollX(): Promise<void> {
             return false;
           }
           if (!isCommandTweet(tweet.text)) {
-            processedTweets.add(tweet.id);
+            markTweetProcessed(processedTweets, tweet.id);
             console.log(`X skip (not a command) ${tweet.id} @${tweet.author}`);
             return false;
           }

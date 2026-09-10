@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-COPY tsconfig.json registry.seed.json ./
+COPY tsconfig.json registry.seed.json processed.seed.json ./
 COPY lib ./lib
 COPY server ./server
 COPY worker ./worker
