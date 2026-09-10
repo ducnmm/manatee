@@ -1,5 +1,7 @@
 import { isAddress } from 'ethers';
 
+import { isBotMention } from './bot';
+
 export type ParsedCommand =
   | { kind: 'send'; amount: string; coin: 'mtee'; handle: string }
   | { kind: 'register'; handle?: string; address: string };
@@ -15,7 +17,7 @@ export function parseCommand(text: string): ParsedCommand {
   }
 
   let rest = tokens;
-  if (tokens[0]!.toLowerCase() === '@manatee') {
+  if (isBotMention(tokens[0]!)) {
     rest = tokens.slice(1);
   }
   if (rest.length === 0) {

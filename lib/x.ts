@@ -33,7 +33,7 @@ export async function searchMentions(sinceId?: string, sinceUnix?: number): Prom
   if (!key) {
     throw new Error('TWITTERAPI_IO_API_KEY not set');
   }
-  const bot = process.env.X_BOT_HANDLE ?? 'manatee';
+  const bot = process.env.X_BOT_HANDLE ?? 'ManateeWallet';
   const now = Math.floor(Date.now() / 1000);
   const from = sinceUnix ?? now - DEFAULT_LOOKBACK_SEC;
   const query = buildMentionQuery(bot, from, now);

@@ -8,8 +8,8 @@ import { parseCommand } from './parser';
 const ADDR = '0x1234567890123456789012345678901234567890';
 const MIXED = getAddress(ADDR);
 
-test('happy send with @manatee prefix', () => {
-  assert.deepEqual(parseCommand('@manatee send 10 mtee @bob'), {
+test('happy send with @ManateeWallet prefix', () => {
+  assert.deepEqual(parseCommand('@ManateeWallet send 10 mtee @bob'), {
     kind: 'send',
     amount: '10',
     coin: 'mtee',
@@ -27,7 +27,7 @@ test('prefix optional: send 10 mtee @bob', () => {
 });
 
 test('strips extra whitespace and lowercases handle', () => {
-  assert.deepEqual(parseCommand('  @manatee   send   1.5   mtee   @Bob_123  '), {
+  assert.deepEqual(parseCommand('  @ManateeWallet   send   1.5   mtee   @Bob_123  '), {
     kind: 'send',
     amount: '1.5',
     coin: 'mtee',
@@ -37,7 +37,7 @@ test('strips extra whitespace and lowercases handle', () => {
 
 test('ctc hint', () => {
   assert.throws(() => parseCommand('send 10 ctc @bob'), /ctc is gas/);
-  assert.throws(() => parseCommand('@manatee send 1 CTC @bob'), /ctc is gas/);
+  assert.throws(() => parseCommand('@ManateeWallet send 1 CTC @bob'), /ctc is gas/);
 });
 
 test('unknown coin', () => {
@@ -61,7 +61,7 @@ test('invalid amount format', () => {
 test('missing coin', () => {
   assert.throws(() => parseCommand('send 10 @bob'), /missing coin/);
   assert.throws(() => parseCommand('send 10'), /missing coin/);
-  assert.throws(() => parseCommand('@manatee send'), /missing amount|missing coin/);
+  assert.throws(() => parseCommand('@ManateeWallet send'), /missing amount|missing coin/);
 });
 
 test('missing handle', () => {
@@ -78,7 +78,7 @@ test('invalid handle', () => {
 });
 
 test('register tweet form: address only', () => {
-  assert.deepEqual(parseCommand(`@manatee register ${ADDR}`), {
+  assert.deepEqual(parseCommand(`@ManateeWallet register ${ADDR}`), {
     kind: 'register',
     address: ADDR,
   });
@@ -94,7 +94,7 @@ test('register handle + address', () => {
     handle: 'bob',
     address: ADDR,
   });
-  assert.deepEqual(parseCommand(`@manatee register @Alice ${ADDR}`), {
+  assert.deepEqual(parseCommand(`@ManateeWallet register @Alice ${ADDR}`), {
     kind: 'register',
     handle: 'alice',
     address: ADDR,

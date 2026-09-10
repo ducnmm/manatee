@@ -11,12 +11,12 @@ test('tweetIdFromUrl parses x.com and twitter.com status URLs', () => {
 
 test('buildMentionQuery windows search like dugong (since_time/until_time)', () => {
   assert.equal(
-    buildMentionQuery('manatee', 1700000000, 1700000030),
-    '@manatee (send OR register) since_time:1700000000 until_time:1700000030',
+    buildMentionQuery('ManateeWallet', 1700000000, 1700000030),
+    '@ManateeWallet (send OR register) since_time:1700000000 until_time:1700000030',
   );
   assert.equal(
-    buildMentionQuery('@Manatee', 1, 2),
-    '@Manatee (send OR register) since_time:1 until_time:2',
+    buildMentionQuery('@ManateeWallet', 1, 2),
+    '@ManateeWallet (send OR register) since_time:1 until_time:2',
   );
 });
 

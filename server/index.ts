@@ -87,7 +87,7 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, url: URL): P
       explorers: cfg.explorers,
       sepoliaChainId: 11155111,
       creditcoinChainId: 102031,
-      bot: process.env.X_BOT_HANDLE ?? 'manatee',
+      bot: process.env.X_BOT_HANDLE ?? 'ManateeWallet',
     });
     return;
   }
@@ -385,8 +385,8 @@ async function pollX(): Promise<void> {
     console.log('X poller off (no TWITTERAPI_IO_API_KEY). Web still works.');
     return;
   }
-  const bot = process.env.X_BOT_HANDLE ?? 'manatee';
-  const as = process.env.X_REPLY_AS ?? 'DugongWallet';
+  const bot = process.env.X_BOT_HANDLE ?? 'ManateeWallet';
+  const as = process.env.X_REPLY_AS ?? 'ManateeWallet';
   console.log(
     `X poller on — @${bot.replace(/^@/, '')} every ${POLL_INTERVAL_SEC}s, 1 tweet/poll (replies as @${as.replace(/^@/, '')})`,
   );

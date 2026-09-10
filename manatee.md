@@ -212,11 +212,11 @@ Worker resolve `@bob` + ticker → `send(token, to, amount)`. ASC không đọc 
 Parser (tweet và CLI dùng chung):
 
 ```
-@manatee send <amount> <coin> @handle
-@manatee register <0xaddress>
+@ManateeWallet send <amount> <coin> @handle
+@ManateeWallet register <0xaddress>
 ```
 
-Ví dụ: `@manatee send 10 mtee @bob`. `<coin>` bắt buộc, allowlist. P0: `mtee`. P1: `usdc`, `usdt`. `ctc` → reject + hint “ctc is gas”.
+Ví dụ: `@ManateeWallet send 10 mtee @bob`. `<coin>` bắt buộc, allowlist. P0: `mtee`. P1: `usdc`, `usdt`. `ctc` → reject + hint “ctc is gas”.
 
 Worker loop (copy ý tutorial 3, code mới):
 

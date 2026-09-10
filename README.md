@@ -124,9 +124,9 @@ Fill `CREDITCOIN_MINT` and `CREDITCOIN_MTEE` in `.env`. Re-`source` `.env`.
 
 ## Demo: web + X
 
-Same command: `@manatee send 10 mtee @bob`. The site is one screen: connect wallet and get 10 test `mtee`. Send happens on X.
+Same command: `@ManateeWallet send 10 mtee @bob`. The site is one screen: connect wallet and get 10 test `mtee`. Send happens on X.
 
-Live: [manatee-production.up.railway.app](https://manatee-production.up.railway.app) — one Railway service (web + API + chain worker + X poller). Mentions are `@manatee`. Replies post as `@DugongWallet` via twitterapi.io (same posting session as dugong; we did not copy dugong's OAuth, markets, or databases).
+Live: [manatee-production.up.railway.app](https://manatee-production.up.railway.app) — one Railway service (web + API + chain worker + X poller). Mentions are [`@ManateeWallet`](https://x.com/ManateeWallet).
 
 ```bash
 npm run server     # API + chain worker + X poller  http://127.0.0.1:8787
@@ -134,14 +134,14 @@ npm run web        # Vite UI with /api proxy         http://127.0.0.1:5173
 ```
 
 - **Web:** connect MetaMask (Sepolia), optional `@handle`, get 10 `mtee`.
-- **X:** tweet `@manatee send 10 mtee @bob`. Two replies: (1) locked on Sepolia + explorer, waiting Attestcoin ~8–10 min; (2) minted on Creditcoin + explorer. Needs `TWITTERAPI_IO_API_KEY` + login cookies + proxy.
+- **X:** tweet `@ManateeWallet send 10 mtee @bob`. Two replies: (1) locked on Sepolia + explorer, waiting Attestcoin ~8–10 min; (2) minted on Creditcoin + explorer. Needs `TWITTERAPI_IO_API_KEY` + login cookies + proxy.
 
 Parser allowlist is `mtee` only. `ctc` → `ctc is gas`. Unknown tickers / `eth` → reject.
 
 Tweet this:
 
 ```
-https://x.com/intent/tweet?text=%40manatee%20send%2010%20mtee%20%40bob
+https://x.com/intent/tweet?text=%40ManateeWallet%20send%2010%20mtee%20%40bob
 ```
 
 `npm run worker` is the chain watcher only (lock event → proof → mint). `npm run server` already starts it unless `START_CHAIN_WORKER=0`.
