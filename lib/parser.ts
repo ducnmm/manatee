@@ -1,7 +1,5 @@
 import { isAddress } from 'ethers';
 
-import { isBotMention } from './bot';
-
 export type ParsedCommand =
   | { kind: 'send'; amount: string; coin: 'mtee'; handle: string }
   | { kind: 'register'; handle?: string; address: string };
@@ -16,9 +14,11 @@ export function parseCommand(text: string): ParsedCommand {
     throw new Error('empty command');
   }
 
+  // X prepends parent-thread mentions on replies, e.g.
+  // `@ManateeWallet @AJEnglish @ManateeWallet send 1 mtee @AJEnglish`.
   let rest = tokens;
-  if (isBotMention(tokens[0]!)) {
-    rest = tokens.slice(1);
+  while (rest.length > 0 && HANDLE_RE.test(rest[0]!)) {
+    rest = rest.slice(1);
   }
   if (rest.length === 0) {
     throw new Error('empty command');

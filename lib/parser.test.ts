@@ -26,6 +26,19 @@ test('prefix optional: send 10 mtee @bob', () => {
   });
 });
 
+test('strips X reply auto-mentions before send', () => {
+  assert.deepEqual(
+    parseCommand('@ManateeWallet @AJEnglish @ManateeWallet send 1 mtee @AJEnglish'),
+    { kind: 'send', amount: '1', coin: 'mtee', handle: 'ajenglish' },
+  );
+  assert.deepEqual(parseCommand('@AJEnglish send 1 mtee @AJEnglish'), {
+    kind: 'send',
+    amount: '1',
+    coin: 'mtee',
+    handle: 'ajenglish',
+  });
+});
+
 test('strips extra whitespace and lowercases handle', () => {
   assert.deepEqual(parseCommand('  @ManateeWallet   send   1.5   mtee   @Bob_123  '), {
     kind: 'send',
