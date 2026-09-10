@@ -4,7 +4,8 @@ import { LOCK_ABI, MINT_ABI, TOKEN_ABI } from './abi';
 import { type ActivityItem, loadActivity, matchesAddress, mergeActivity } from './activity';
 import { loadConfig } from './config';
 
-const LOOKBACK_BLOCKS = 40_000;
+const LOOKBACK_BLOCKS = 12_000;
+const CHUNK = 4_000;
 const cache = new Map<string, { at: number; items: ActivityItem[] }>();
 const CACHE_MS = 20_000;
 
@@ -27,9 +28,29 @@ async function stamps(
   return out;
 }
 
-async function fromBlock(provider: JsonRpcProvider): Promise<number> {
+async function fromBlock(provider: JsonRpcProvider): Promise<{ start: number; latest: number }> {
   const latest = await provider.getBlockNumber();
-  return Math.max(0, latest - LOOKBACK_BLOCKS);
+  return { start: Math.max(0, latest - LOOKBACK_BLOCKS), latest };
+}
+
+async function queryChunks(
+  contract: Contract,
+  filter: unknown,
+  start: number,
+  latest: number,
+): Promise<EventLog[]> {
+  const out: EventLog[] = [];
+  for (let from = start; from <= latest; from += CHUNK) {
+    const to = Math.min(from + CHUNK - 1, latest);
+    const logs = await contract.queryFilter(filter as never, from, to);
+    for (const log of logs) {
+      const event = asEventLog(log);
+      if (event) {
+        out.push(event);
+      }
+    }
+  }
+  return out;
 }
 
 async function loadChainActivity(address: string): Promise<ActivityItem[]> {
@@ -39,9 +60,9 @@ async function loadChainActivity(address: string): Promise<ActivityItem[]> {
 
   if (cfg.sourceRpc && cfg.sepoliaMtee) {
     const sepolia = new JsonRpcProvider(cfg.sourceRpc);
-    const start = await fromBlock(sepolia);
+    const { start, latest } = await fromBlock(sepolia);
     const token = new Contract(cfg.sepoliaMtee, TOKEN_ABI, sepolia);
-    const incoming = (await token.queryFilter(token.filters.Transfer(null, address), start)).map(asEventLog).filter(Boolean) as EventLog[];
+    const incoming = await queryChunks(token, token.filters.Transfer(null, address), start, latest);
     const times = await stamps(sepolia, incoming);
     for (const event of incoming) {
       const from = String(event.args?.from ?? event.args?.[0] ?? '');
@@ -62,8 +83,8 @@ async function loadChainActivity(address: string): Promise<ActivityItem[]> {
 
     if (cfg.sepoliaLock) {
       const lock = new Contract(cfg.sepoliaLock, LOCK_ABI, sepolia);
-      const sent = (await lock.queryFilter(lock.filters.TokensSentForBridging(address), start)).map(asEventLog).filter(Boolean) as EventLog[];
-      const recv = (await lock.queryFilter(lock.filters.TokensSentForBridging(null, address), start)).map(asEventLog).filter(Boolean) as EventLog[];
+      const sent = await queryChunks(lock, lock.filters.TokensSentForBridging(address), start, latest);
+      const recv = await queryChunks(lock, lock.filters.TokensSentForBridging(null, address), start, latest);
       const lockEvents = [...sent, ...recv];
       const lockTimes = await stamps(sepolia, lockEvents);
       for (const event of lockEvents) {
@@ -87,9 +108,9 @@ async function loadChainActivity(address: string): Promise<ActivityItem[]> {
 
   if (cfg.creditcoinRpc && cfg.creditcoinMint) {
     const cc3 = new JsonRpcProvider(cfg.creditcoinRpc);
-    const start = await fromBlock(cc3);
+    const { start, latest } = await fromBlock(cc3);
     const minter = new Contract(cfg.creditcoinMint, MINT_ABI, cc3);
-    const minted = (await minter.queryFilter(minter.filters.TokensMinted(null, address), start)).map(asEventLog).filter(Boolean) as EventLog[];
+    const minted = await queryChunks(minter, minter.filters.TokensMinted(null, address), start, latest);
     const times = await stamps(cc3, minted);
     for (const event of minted) {
       const to = String(event.args?.to ?? event.args?.[1] ?? address);
@@ -107,9 +128,9 @@ async function loadChainActivity(address: string): Promise<ActivityItem[]> {
     }
   } else if (cfg.creditcoinRpc && cfg.creditcoinMtee) {
     const cc3 = new JsonRpcProvider(cfg.creditcoinRpc);
-    const start = await fromBlock(cc3);
+    const { start, latest } = await fromBlock(cc3);
     const token = new Contract(cfg.creditcoinMtee, TOKEN_ABI, cc3);
-    const incoming = (await token.queryFilter(token.filters.Transfer(ZeroAddress, address), start)).map(asEventLog).filter(Boolean) as EventLog[];
+    const incoming = await queryChunks(token, token.filters.Transfer(ZeroAddress, address), start, latest);
     const times = await stamps(cc3, incoming);
     for (const event of incoming) {
       const amount = formatEther(event.args?.value ?? event.args?.[2] ?? 0n);
@@ -139,7 +160,12 @@ export async function listActivityForAddress(address: string): Promise<ActivityI
     chain = hit.items;
   } else {
     try {
-      chain = await loadChainActivity(address);
+      chain = await Promise.race([
+        loadChainActivity(address),
+        new Promise<ActivityItem[]>((_, reject) => {
+          setTimeout(() => reject(new Error('chain activity timeout')), 8_000);
+        }),
+      ]);
       cache.set(key, { at: Date.now(), items: chain });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
