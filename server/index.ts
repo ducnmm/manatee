@@ -35,7 +35,7 @@ function envPositiveSeconds(name: string, fallback: number): number {
 }
 
 /** Demo: POLL_INTERVAL_SEC=5 SEARCH_LOOKBACK_SEC=10 */
-const POLL_INTERVAL_SEC = envPositiveSeconds('POLL_INTERVAL_SEC', 60);
+const POLL_INTERVAL_SEC = envPositiveSeconds('POLL_INTERVAL_SEC', 30);
 const SEARCH_LOOKBACK_SEC = envPositiveSeconds('SEARCH_LOOKBACK_SEC', 120);
 
 function json(res: ServerResponse, status: number, body: unknown): void {
