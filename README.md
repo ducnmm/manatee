@@ -6,6 +6,20 @@ Hackathon track: **DeFi**. Name: **manatee**. Repo: public ([github.com/ducnmm/m
 
 Protocol details: [`docs/attestcoin.md`](docs/attestcoin.md).
 
+## For judges (60 seconds)
+
+Live app: [manatee-production.up.railway.app](https://manatee-production.up.railway.app). Search `@ajenglish` (or Continue with X) to open the recipient dashboard.
+
+| Step | Link |
+|---|---|
+| Command tweet | [`@ManateeWallet send 1 mtee @AJEnglish`](https://x.com/MauDucKG/status/2097873004579754267) |
+| Sepolia lock — event `TokensSentForBridging` has `to` + `token` | [0xf74e4375…](https://sepolia.etherscan.io/tx/0xf74e437531fbcd7c955c2b08f3a37bb31655f898f30ef7567100e0b4984e98aa) |
+| Creditcoin mint after Attestcoin (~8–10 min) | [0xb6b3e7a5…](https://creditcoin-testnet.blockscout.com/tx/0xb6b3e7a5d8964cb32ba96372ddbd94781b9f52e1fd76c273d882b9d07b52db9d) |
+
+`@AJEnglish` derived account: [`0x01a256e8…7DA6`](https://creditcoin-testnet.blockscout.com/address/0x01a256e8edcEc88D04219a395AafE1a2565D7DA6). Bot: [`@ManateeWallet`](https://x.com/ManateeWallet).
+
+The tweet is UX. Settlement reads the attested Sepolia event. CTC is gas only.
+
 ## Attestcoin Integration Summary
 
 > manatee locks allowlisted tokens on Ethereum Sepolia with recipient and token in `TokensSentForBridging`. An off-chain worker builds Merkle and continuity proofs via `@gluwa/usc-sdk`. `ManateeMint` on Creditcoin CC3 testnet calls the Block Prover precompile, checks receipt status, rejects replays, and mints the mapped token only to the attested event `to` / `token`. The social command never chooses recipient or asset. CTC is gas only.
@@ -134,7 +148,7 @@ npm run web        # Vite UI with /api proxy         http://127.0.0.1:5173
 ```
 
 - **Web:** Continue with X (OAuth, same idea as Dugong) or connect a wallet. The dashboard shows that X handle’s derived address, balances, and send/mint history. Search `@handle` also opens that account.
-- **X:** tweet `@ManateeWallet send 10 mtee @bob`. Two replies: (1) locked on Sepolia + explorer, waiting Attestcoin ~8–10 min; (2) minted on Creditcoin + explorer. Needs `TWITTERAPI_IO_API_KEY` + login cookies + proxy. Poller cadence is env: `POLL_INTERVAL_SEC` (default 60) and `SEARCH_LOOKBACK_SEC` (default 120). For a live demo set `POLL_INTERVAL_SEC=5` and `SEARCH_LOOKBACK_SEC=10`.
+- **X:** tweet `@ManateeWallet send 10 mtee @bob`. The worker locks on Sepolia, waits for Attestcoin (~8–10 min), then mints on Creditcoin. Dashboard history updates from chain + the command log. A live command tweet for judges is linked in [For judges](#for-judges-60-seconds).
 
 Parser allowlist is `mtee` only. `ctc` → `ctc is gas`. Unknown tickers / `eth` → reject.
 
@@ -170,6 +184,8 @@ CC3 testnet, 2026-09-01. E2E: `@alice` locked 10 mtee on Sepolia; after attest, 
 
 | Tx | Explorer |
 |---|---|
+| X send lock (1 mtee → `@AJEnglish`) | [0xf74e4375…](https://sepolia.etherscan.io/tx/0xf74e437531fbcd7c955c2b08f3a37bb31655f898f30ef7567100e0b4984e98aa) |
+| X send mint (`@AJEnglish` on CC3) | [0xb6b3e7a5…](https://creditcoin-testnet.blockscout.com/tx/0xb6b3e7a5d8964cb32ba96372ddbd94781b9f52e1fd76c273d882b9d07b52db9d) |
 | Sepolia lock (10 mtee → Bob) | [0x01c3ab65…](https://sepolia.etherscan.io/tx/0x01c3ab656536c7cda4e31170caab89d56da26d1ea04ba26febe4e2e65583bf1e) |
 | Creditcoin mint (10 mtee to Bob) | [0xa904a4d2…](https://creditcoin-testnet.blockscout.com/tx/0xa904a4d2f31d83f0e70d8d72581d9341a738f5afe1d840b935378d16a3541c2b) |
 
