@@ -10,7 +10,7 @@ Protocol details: [`docs/attestcoin.md`](docs/attestcoin.md).
 
 Live app: [manatee-production.up.railway.app](https://manatee-production.up.railway.app). Search `@ajenglish` (or Continue with X) to open the recipient dashboard.
 
-Demo video (58s): [youtu.be/fPLEm7U4D_4](https://youtu.be/fPLEm7U4D_4). Pitch deck: [`docs/demo/manatee-deck.pdf`](docs/demo/manatee-deck.pdf).
+Demo video (58s): [youtu.be/fPLEm7U4D_4](https://youtu.be/fPLEm7U4D_4). Pitch deck: [`docs/demo/manatee-deck.pdf`](docs/demo/manatee-deck.pdf). DoraHacks BUIDL: [dorahacks.io/buidl/48446](https://dorahacks.io/buidl/48446).
 
 | Step | Link |
 |---|---|
