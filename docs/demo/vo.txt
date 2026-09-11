@@ -1,0 +1,11 @@
+Manatee is a social cross-chain send. One tweet: send mtee to an X handle. The tweet is only U X. Money moves after Attestcoin verifies the Sepolia lock.
+[[slnc 700]]
+The user tweets at Manatee Wallet: send one mtee to A J English.
+[[slnc 700]]
+This locks the token on Sepolia. Recipient and token are in the event. Not minted yet. Attestcoin takes about eight to ten minutes.
+[[slnc 800]]
+After attestation, Manatee Mint verifies the proof, checks receipt status, rejects replays, and mints only to the event recipient.
+[[slnc 700]]
+The dashboard follows the X handle. A J English now has two mtee on Creditcoin. C T C is gas only.
+[[slnc 700]]
+Live on Sepolia and Creditcoin testnet. Repo: github dot com slash duc n m m slash manatee.
